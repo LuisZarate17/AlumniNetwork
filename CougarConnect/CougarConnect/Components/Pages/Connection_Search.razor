@@ -1,0 +1,81 @@
+﻿@page "/Connection_Search"
+@rendermode InteractiveServer
+
+<PageTitle>Connection_Search</PageTitle>
+
+<h3>Search for a alumni connection</h3>
+
+
+
+
+<p>Search for a alumni connection by entering one or multiple of the following criteria:</p>
+
+<div class="search-container">
+    <div class="mb-3">
+        <label for="searchMajor" class="form-label">Major</label>
+        <input type="text" class="form-control" id="searchMajor" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchGradYear" class="form-label">Graduation Year</label>
+        <input type="text" class="form-control" id="searchGradYear" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchCompany" class="form-label">Company</label>
+        <input type="text" class="form-control" id="searchCompany" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchCity" class="form-label">City</label>
+        <input type="text" class="form-control" id="searchCity" placeholder="Enter Text">
+    </div>
+    <button type="button" class="btn btn-primary">Search</button>
+</div>
+
+
+@code {
+
+
+
+    public static List<string> People_Search(string inputCsvFile, string firstname = null, string lastname = null, string gradyear = null, string school_id = null, string city_id = null, string major_id = null)
+    {
+        // List to store filtered results
+        var filteredResults = new List<string>();
+
+        // Read all lines from the CSV
+        var lines = File.ReadAllLines(inputCsvFile);
+
+        // First line is the header
+        var header = lines[0];
+        filteredResults.Add(header);
+
+        // Iterate through each line of the CSV and filter the data
+        for (int i = 1; i < lines.Length; i++) // Skip header
+        {
+            var fields = lines[i].Split(','); // Assuming CSV is comma-separated
+
+            // Extract alumni data fields
+            var alumniFirstname = fields[0];
+            var alumniLastname = fields[1];
+            var alumniGradYear = fields[2];
+            var alumniSchoolId = fields[3];
+            var alumniCityId = fields[4];
+            var alumniMajorId = fields[5];
+
+            // Check if the current row matches all provided filter criteria
+            if ((string.IsNullOrEmpty(firstname) || alumniFirstname.Equals(firstname, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrEmpty(lastname) || alumniLastname.Equals(lastname, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrEmpty(gradyear) || alumniGradYear == gradyear) &&
+                (string.IsNullOrEmpty(school_id) || alumniSchoolId == school_id) &&
+                (string.IsNullOrEmpty(city_id) || alumniCityId == city_id) &&
+                (string.IsNullOrEmpty(major_id) || alumniMajorId == major_id))
+            {
+                filteredResults.Add(lines[i]); // Add the matching line to the filtered results
+            }
+        }
+        return filteredResults; // Return the list of filtered results
+    }
+
+
+
+}
+
+
