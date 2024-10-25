@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "tF5ETsJDA0kMjMUEeG6OKo5dya3QfTx2SywNfMezz5M=",
+  "Hash": "SjP7qktSspntZ4AtXoHMp4pMHpHsLWtnQ8QE7r8QSww=",
   "Source": "CougarConnect",
   "BasePath": "_content/CougarConnect",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "CougarConnect\\wwwroot",
       "Source": "CougarConnect",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
       "BasePath": "_content/CougarConnect",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\CougarConnect.styles.css",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\CougarConnect.styles.css",
       "SourceId": "CougarConnect",
       "SourceType": "Computed",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "CougarConnect.styles.css",
       "AssetKind": "All",
@@ -33,13 +33,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\CougarConnect.styles.css"
+      "OriginalItemSpec": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\bundle\\CougarConnect.styles.css"
     },
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\CougarConnect.bundle.scp.css",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\CougarConnect.bundle.scp.css",
       "SourceId": "CougarConnect",
       "SourceType": "Computed",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "CougarConnect.bundle.scp.css",
       "AssetKind": "All",
@@ -52,13 +52,13 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\CougarConnect.bundle.scp.css"
+      "OriginalItemSpec": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\CougarConnect.bundle.scp.css"
     },
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\app.css",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\app.css",
       "SourceId": "CougarConnect",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "app.css",
       "AssetKind": "All",
@@ -74,10 +74,10 @@
       "OriginalItemSpec": "wwwroot\\app.css"
     },
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\bootstrap\\bootstrap.min.css",
       "SourceId": "CougarConnect",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "bootstrap/bootstrap.min.css",
       "AssetKind": "All",
@@ -93,10 +93,10 @@
       "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css"
     },
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\bootstrap\\bootstrap.min.css.map",
       "SourceId": "CougarConnect",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "bootstrap/bootstrap.min.css.map",
       "AssetKind": "All",
@@ -112,10 +112,10 @@
       "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css.map"
     },
     {
-      "Identity": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\favicon.png",
+      "Identity": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\favicon.png",
       "SourceId": "CougarConnect",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
+      "ContentRoot": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\AlumniNetwork\\CougarConnect\\CougarConnect\\wwwroot\\",
       "BasePath": "_content/CougarConnect",
       "RelativePath": "favicon.png",
       "AssetKind": "All",
