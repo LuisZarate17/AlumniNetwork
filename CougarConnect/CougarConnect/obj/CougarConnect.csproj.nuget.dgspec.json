@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
+    "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
   },
   "projects": {
-    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
+    "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "projectUniqueName": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
         "projectName": "CougarConnect",
-        "projectPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
-        "packagesPath": "C:\\Users\\Jonah\\.nuget\\packages\\",
-        "outputPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\CougarConnect\\obj\\",
+        "projectPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "packagesPath": "C:\\Users\\luisz\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Jonah\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\luisz\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
