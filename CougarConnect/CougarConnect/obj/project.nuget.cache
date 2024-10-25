@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "AKRsC6kQLyY=",
+  "dgSpecHash": "msFp8Vl2f7k=",
   "success": true,
-  "projectFilePath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+  "projectFilePath": "C:\\Users\\luisz\\Downloads\\AlumniNetworkCopt\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\luisz\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\luisz\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

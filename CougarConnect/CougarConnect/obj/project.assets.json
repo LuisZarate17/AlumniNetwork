@@ -4253,11 +4253,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+      "projectUniqueName": "C:\\Users\\luisz\\Downloads\\AlumniNetworkCopt\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
       "projectName": "CougarConnect",
-      "projectPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+      "projectPath": "C:\\Users\\luisz\\Downloads\\AlumniNetworkCopt\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
       "packagesPath": "C:\\Users\\luisz\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
+      "outputPath": "C:\\Users\\luisz\\Downloads\\AlumniNetworkCopt\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\luisz\\AppData\\Roaming\\NuGet\\NuGet.Config",

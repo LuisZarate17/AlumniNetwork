@@ -5,6 +5,32 @@
 
 <h3>Search for a alumni connection</h3>
 
+
+
+
+<p>Search for a alumni connection by entering one or multiple of the following criteria:</p>
+
+<div class="search-container">
+    <div class="mb-3">
+        <label for="searchMajor" class="form-label">Major</label>
+        <input type="text" class="form-control" id="searchMajor" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchGradYear" class="form-label">Graduation Year</label>
+        <input type="text" class="form-control" id="searchGradYear" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchCompany" class="form-label">Company</label>
+        <input type="text" class="form-control" id="searchCompany" placeholder="Enter Text">
+    </div>
+    <div class="mb-3">
+        <label for="searchCity" class="form-label">City</label>
+        <input type="text" class="form-control" id="searchCity" placeholder="Enter Text">
+    </div>
+    <button type="button" class="btn btn-primary">Search</button>
+</div>
+
+
 @code {
 
 
@@ -46,7 +72,7 @@
             }
         }
         return filteredResults; // Return the list of filtered results
-    } 
+    }
 
 
 
