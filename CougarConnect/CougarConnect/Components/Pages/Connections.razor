@@ -23,7 +23,7 @@ else
                     <th>Name</th>
                     <th>Industry</th>
                     <th>City</th>
-                    <th>Action</th>
+                    <th>Response</th>
                 </tr>
             </thead>
             <tbody>
@@ -34,7 +34,16 @@ else
                         <td>@connection.FullName</td>
                         <td>@connection.Industry</td>
                         <td>@connection.City</td>
-                        <td>@connection.Status</td>
+                        <td>
+                            @if (connection.Status == "Accepted")
+                            {
+                                <button class="btn btn-success" @onclick="() => ViewContactInfo(connection.Id)">Accepted</button>
+                            }
+                            else
+                            {
+                                @connection.Status
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -55,7 +64,7 @@ else
                     <th>Name</th>
                     <th>Industry</th>
                     <th>City</th>
-                    <th>Action</th>
+                    <th>Response</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,7 +125,8 @@ else
                     RequestDate = DateTime.Now.AddDays(-random.Next(1, 10)),
                     Industry = industries[random.Next(industries.Length)],
                     City = cities[random.Next(cities.Length)],
-                    Status = status
+                    Status = status,
+                    ContactInfo = $"Email: {firstName.ToLower()}.{lastName.ToLower()}@example.com | Phone: (555) 123-456{i}"
                 });
         }
         return requests;
@@ -129,6 +139,16 @@ else
         return names[random.Next(names.Length)];
     }
 
+    private void ViewContactInfo(int id)
+    {
+        var connection = allConnections?.FirstOrDefault(c => c.Id == id);
+        if (connection != null)
+        {
+            // Display contact info (simulate a modal or navigation)
+            Console.WriteLine($"Contact Info for {connection.FullName}: {connection.ContactInfo}");
+        }
+    }
+
     private class ConnectionRequest
     {
         public int Id { get; set; }
@@ -139,5 +159,6 @@ else
         public string Industry { get; set; }
         public string City { get; set; }
         public string Status { get; set; } // Accepted/Declined
+        public string ContactInfo { get; set; } // Contact details
     }
 }
