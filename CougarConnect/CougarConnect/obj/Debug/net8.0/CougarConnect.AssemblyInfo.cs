@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CougarConnect")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62efedc0f0291906a02ba97f6cbfcffbb3b80050")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b3aaaffc5635a8d316979a23c4e5a329e25fba70")]
 [assembly: System.Reflection.AssemblyProductAttribute("CougarConnect")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CougarConnect")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
