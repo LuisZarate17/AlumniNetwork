@@ -1,81 +1,233 @@
 ﻿@page "/Connection_Search"
-@rendermode InteractiveServer
+@using System.Text.Json
+@using Supabase
+@using Supabase.Postgrest.Attributes
+@using Supabase.Postgrest.Models
 
-<PageTitle>Connection_Search</PageTitle>
+@inject NavigationManager NavigationManager
 
-<h3>Search for a alumni connection</h3>
+<PageTitle>Connection Search</PageTitle>
 
+<h3>Search for an WSU Alumni Connection</h3>
 
-
-
-<p>Search for a alumni connection by entering one or multiple of the following criteria:</p>
+<p>Search for alumni connections by entering one or multiple criteria:</p>
 
 <div class="search-container">
     <div class="mb-3">
         <label for="searchMajor" class="form-label">Major</label>
-        <input type="text" class="form-control" id="searchMajor" placeholder="Enter Text">
+        <input type="text" class="form-control" id="searchMajor" @bind="Major" placeholder="Enter Major">
     </div>
     <div class="mb-3">
         <label for="searchGradYear" class="form-label">Graduation Year</label>
-        <input type="text" class="form-control" id="searchGradYear" placeholder="Enter Text">
+        <input type="text" class="form-control" id="searchGradYear" @bind="GradYear" placeholder="Enter Graduation Year">
     </div>
     <div class="mb-3">
         <label for="searchCompany" class="form-label">Company</label>
-        <input type="text" class="form-control" id="searchCompany" placeholder="Enter Text">
+        <input type="text" class="form-control" id="searchCompany" @bind="Company" placeholder="Enter Company">
     </div>
     <div class="mb-3">
         <label for="searchCity" class="form-label">City</label>
-        <input type="text" class="form-control" id="searchCity" placeholder="Enter Text">
+        <input type="text" class="form-control" id="searchCity" @bind="City" placeholder="Enter City">
     </div>
-    <button type="button" class="btn btn-primary">Search</button>
+    
+    <button type="button" class="btn btn-primary" @onclick="PerformSearch">Search</button>
+
 </div>
 
+@if (IsLoading) { <p>Loading...</p> }
+
+@if (AlumniResults.Any())
+
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>First</th>
+                <th>Last</th>
+                <th>Major</th>
+                <th>City</th>
+                <th>Company</th>
+                <th>Graduation Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alum in AlumniResults)
+
+            {
+                <tr>
+                    <td>@alum.First</td>
+                    <td>@alum.Last</td>
+                    <td>@alum.Major</td>
+                    <td>@alum.City</td>
+                    <td>@alum.Company</td>
+                    <td>@alum.GradYear</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+else if (!IsLoading && !AlumniResults.Any() && Searched)
+
+{
+    <p>No results found.</p>
+}
 
 @code {
 
+    // Input fields
+    private string Major { get; set; } = string.Empty;
+    private string GradYear { get; set; } = string.Empty;
+    private string Company { get; set; } = string.Empty;
+    private string City { get; set; } = string.Empty;
 
 
-    public static List<string> People_Search(string inputCsvFile, string firstname = null, string lastname = null, string gradyear = null, string school_id = null, string city_id = null, string major_id = null)
+
+    // Search results
+
+    private List<Alumni> AlumniResults { get; set; } = new();
+
+    private bool IsLoading { get; set; } = false;
+
+    private bool Searched { get; set; } = false;
+
+
+
+    // Supabase client initialization
+
+    private readonly string url = "https://jcbbunghgiboiqzljfyt.supabase.co";
+
+    private readonly string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjYmJ1bmdoZ2lib2lxemxqZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAxNDYzMzUsImV4cCI6MjA0NTcyMjMzNX0.8-yEGxWkQ-c9zn3XSn_4EouHeiUk5qZCSbHkyOIRPUI";
+
+    private Supabase.Client supabase;
+
+
+
+    // Alumni model
+
+    [Table("Alumni")]
+
+    class Alumni : BaseModel
+
     {
-        // List to store filtered results
-        var filteredResults = new List<string>();
 
-        // Read all lines from the CSV
-        var lines = File.ReadAllLines(inputCsvFile);
+        [PrimaryKey("Id")]
 
-        // First line is the header
-        var header = lines[0];
-        filteredResults.Add(header);
+        public int Id { get; set; }
 
-        // Iterate through each line of the CSV and filter the data
-        for (int i = 1; i < lines.Length; i++) // Skip header
-        {
-            var fields = lines[i].Split(','); // Assuming CSV is comma-separated
 
-            // Extract alumni data fields
-            var alumniFirstname = fields[0];
-            var alumniLastname = fields[1];
-            var alumniGradYear = fields[2];
-            var alumniSchoolId = fields[3];
-            var alumniCityId = fields[4];
-            var alumniMajorId = fields[5];
 
-            // Check if the current row matches all provided filter criteria
-            if ((string.IsNullOrEmpty(firstname) || alumniFirstname.Equals(firstname, StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrEmpty(lastname) || alumniLastname.Equals(lastname, StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrEmpty(gradyear) || alumniGradYear == gradyear) &&
-                (string.IsNullOrEmpty(school_id) || alumniSchoolId == school_id) &&
-                (string.IsNullOrEmpty(city_id) || alumniCityId == city_id) &&
-                (string.IsNullOrEmpty(major_id) || alumniMajorId == major_id))
-            {
-                filteredResults.Add(lines[i]); // Add the matching line to the filtered results
-            }
-        }
-        return filteredResults; // Return the list of filtered results
+        [Column("First")]
+
+        public string First { get; set; }
+
+
+
+        [Column("Last")]
+
+        public string Last { get; set; }
+
+
+
+        [Column("GradYear")]
+
+        public string GradYear { get; set; }
+
+
+
+        [Column("City")]
+
+        public string City { get; set; }
+
+
+
+        [Column("Major")]
+
+        public string Major { get; set; }
+
+
+
+        [Column("Company")]
+
+        public string Company { get; set; }
+
     }
 
 
 
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        var options = new Supabase.SupabaseOptions { AutoConnectRealtime = true };
+
+        supabase = new Supabase.Client(url, key, options);
+
+        await supabase.InitializeAsync();
+
+    }
+
+
+
+    private async Task PerformSearch()
+
+    {
+
+        IsLoading = true;
+
+        Searched = false;
+
+        AlumniResults.Clear();
+
+
+
+        try
+
+        {
+
+            // Combine inputs into a single keyword
+
+            var keyword = $"{Major} {GradYear} {Company} {City}".Trim();
+
+
+
+            // Call Supabase RPC function
+
+            var alum = await supabase.Rpc("engine", new { keyword });
+
+
+
+            // Deserialize results
+
+            if (alum.Content != null && alum.Content.Length > 0)
+
+            {
+
+                AlumniResults = JsonSerializer.Deserialize<List<Alumni>>(alum.Content);
+
+                Console.WriteLine("tada");
+
+            }
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Console.WriteLine($"Error: {ex.Message}");
+
+        }
+
+        finally
+
+        {
+
+            IsLoading = false;
+
+            Searched = true;
+
+        }
+
+    }
 }
-
-
