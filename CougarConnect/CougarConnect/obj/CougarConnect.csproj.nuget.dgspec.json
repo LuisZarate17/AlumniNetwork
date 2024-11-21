@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
+    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\NetworkCurrent\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
   },
   "projects": {
-    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
+    "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\NetworkCurrent\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "projectUniqueName": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\NetworkCurrent\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
         "projectName": "CougarConnect",
-        "projectPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "projectPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\NetworkCurrent\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
         "packagesPath": "C:\\Users\\Jonah\\.nuget\\packages\\",
-        "outputPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\CougarConnect\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
+        "outputPath": "C:\\OneDrive\\School\\WSU Fall 2024\\CPTS 322\\NetworkCurrent\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Jonah\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -45,6 +45,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Mandrill.net": {
+              "target": "Package",
+              "version": "[9.0.1, )"
+            },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.10, )"
