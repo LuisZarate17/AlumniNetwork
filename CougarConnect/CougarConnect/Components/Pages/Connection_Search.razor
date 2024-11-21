@@ -8,7 +8,7 @@
 
 <PageTitle>Connection Search</PageTitle>
 
-<h3>Search for an Alumni Connection</h3>
+<h3>Search for an WSU Alumni Connection</h3>
 
 <p>Search for alumni connections by entering one or multiple criteria:</p>
 
@@ -29,14 +29,12 @@
         <label for="searchCity" class="form-label">City</label>
         <input type="text" class="form-control" id="searchCity" @bind="City" placeholder="Enter City">
     </div>
+    
     <button type="button" class="btn btn-primary" @onclick="PerformSearch">Search</button>
+
 </div>
 
-@if (IsLoading)
-
-{
-    <p>Loading...</p>
-}
+@if (IsLoading) { <p>Loading...</p> }
 
 @if (AlumniResults.Any())
 
@@ -78,13 +76,9 @@ else if (!IsLoading && !AlumniResults.Any() && Searched)
 @code {
 
     // Input fields
-
     private string Major { get; set; } = string.Empty;
-
     private string GradYear { get; set; } = string.Empty;
-
     private string Company { get; set; } = string.Empty;
-
     private string City { get; set; } = string.Empty;
 
 

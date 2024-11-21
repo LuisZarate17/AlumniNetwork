@@ -602,3 +602,15 @@ C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Storage.dll
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\System.Reactive.dll
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Websocket.Client.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\MimeMapping.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Core.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Functions.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Gotrue.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Postgrest.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Realtime.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Storage.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\System.Reactive.dll
+C:\Users\luisz\Downloads\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Websocket.Client.dll

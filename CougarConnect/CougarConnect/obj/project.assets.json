@@ -4358,24 +4358,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\lagsp\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\luisz\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+      "projectUniqueName": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
       "projectName": "CougarConnect",
-      "projectPath": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
-      "packagesPath": "C:\\Users\\lagsp\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
+      "projectPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+      "packagesPath": "C:\\Users\\luisz\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\luisz\\Downloads\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\lagsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\luisz\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -4383,7 +4378,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -4447,7 +4441,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
