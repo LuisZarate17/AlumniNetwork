@@ -602,3 +602,9 @@ C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Supabase.Storage.dll
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\System.Reactive.dll
 C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\Websocket.Client.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\System.Data.SqlClient.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\runtimes\win-arm64\native\sni.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\runtimes\win-x64\native\sni.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\runtimes\win-x86\native\sni.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\runtimes\unix\lib\net8.0\System.Data.SqlClient.dll
+C:\Users\lagsp\Source\Repos\AlumniNetwork\CougarConnect\CougarConnect\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Data.SqlClient.dll
