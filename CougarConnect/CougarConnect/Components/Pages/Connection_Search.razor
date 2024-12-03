@@ -5,8 +5,7 @@
 
 <h3>Search for an alumni connection</h3>
 
-<p>Search for an alumni connection by entering one or multiple of the following criteria:</p>
-
+<!-- Search Form -->
 <div class="search-container">
     <div class="mb-3">
         <label for="searchMajor" class="form-label">Major</label>
@@ -33,7 +32,11 @@
     <ul>
         @foreach (var result in filteredResults)
         {
-            <li>@result</li>
+            <li>
+                <button class="btn btn-link" @onclick="() => OnResultClick(result)">
+                    @result
+                </button>
+            </li>
         }
     </ul>
 }
@@ -42,54 +45,125 @@ else
     <p>No results found.</p>
 }
 
+<!-- Modal for Connection Request -->
+@if (showModal)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connection Request</h5>
+                    <button type="button" class="close" @onclick="CloseModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to send a connection request to <strong>@selectedAlumni</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">No</button>
+                    <button type="button" class="btn btn-primary" @onclick="OpenConnectionForm">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Connection Request Form -->
+@if (showConnectionForm)
+{
+    <div class="connection-form">
+        <h4>Fill out the Connection Request Form</h4>
+
+        <!-- EditForm Component for Connection Request -->
+        <EditForm Model="@connectionRequest" OnValidSubmit="HandleConnectionRequestSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="requesterName" class="form-label">Your Name</label>
+                <InputText id="requesterName" class="form-control" @bind-Value="connectionRequest.RequesterName" />
+            </div>
+
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <InputTextArea id="message" class="form-control" @bind-Value="connectionRequest.Message" />
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Send Request</button>
+            </div>
+        </EditForm>
+    </div>
+}
+
 @code {
-    // Bind these properties to the form inputs
     private string searchMajor;
     private string searchGradYear;
     private string searchCompany;
     private string searchCity;
 
-    // Store filtered results
     private List<string> filteredResults;
+    private bool showModal = false;
+    private bool showConnectionForm = false; // Toggle visibility of the connection form
+    private string selectedAlumni;
+    
+    // Connection request model
+    private ConnectionRequest connectionRequest = new ConnectionRequest();
 
-    // Method that is called when the Search button is clicked
     private void OnSearchClick()
     {
-        // Provide the path to your CSV file
         string inputCsvFile = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Alumni_rows.csv");
-
-        // Call the search function
         filteredResults = People_Search(inputCsvFile, searchMajor, searchGradYear, searchCompany, searchCity);
     }
 
-    // Your search logic function
+    private void OnResultClick(string result)
+    {
+        selectedAlumni = result; 
+        showModal = true; 
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private void OpenConnectionForm()
+    {
+        showModal = false; // Close the modal
+        showConnectionForm = true; // Show the connection request form
+        StateHasChanged(); // Ensure the UI updates
+    }
+
+    private void HandleConnectionRequestSubmit()
+    {
+        // Handle the connection request submission logic here (e.g., saving to a database or sending an email)
+        Console.WriteLine($"Connection request sent to {selectedAlumni} from {connectionRequest.RequesterName} with message: {connectionRequest.Message}");
+
+        // After submission, hide the form and show a success message or redirect the user
+        showConnectionForm = false; 
+        connectionRequest = new ConnectionRequest(); // Reset the form
+        Console.WriteLine("Connection request submitted successfully!");
+    }
+
     public static List<string> People_Search(string inputCsvFile, string major = null, string gradYear = null, string company = null, string city = null)
     {
-        // List to store filtered results
         var filteredResults = new List<string>();
-
-        // Read all lines from the CSV
         var lines = File.ReadAllLines(inputCsvFile);
-
-        // Skip the header row
         var header = lines[0];
         var headers = header.Split(',');
 
-        // We will skip adding the header row in filtered results as we're just returning data
-        for (int i = 1; i < lines.Length; i++) // Skip header
+        for (int i = 1; i < lines.Length; i++)
         {
-            var fields = lines[i].Split(','); // Assuming CSV is comma-separated
+            var fields = lines[i].Split(',');
 
-            // Extract alumni data fields based on your CSV columns
             var alumniFirstName = fields[1];
             var alumniLastName = fields[2];
             var alumniGradYear = fields[3];
             var alumniCity = fields[4];
             var alumniMajor = fields[5];
             var alumniCompany = fields[6];
-            // No 'Company' field in CSV; so you can ignore it or modify CSV accordingly.
 
-            // Check if the current row matches the filter criteria
             bool matchesFilter = true;
 
             if (!string.IsNullOrEmpty(major) && !alumniMajor.Contains(major, StringComparison.OrdinalIgnoreCase))
@@ -112,7 +186,6 @@ else
                 matchesFilter = false;
             }
 
-            // If all filters pass, add the result to the list
             if (matchesFilter)
             {
                 var resultString = $"{alumniFirstName} {alumniLastName} ({alumniGradYear}) - {alumniMajor} - {alumniCity} - {alumniCompany}";
@@ -122,4 +195,12 @@ else
 
         return filteredResults;
     }
+
+    public class ConnectionRequest
+    {
+        public string RequesterName { get; set; }
+        public string Message { get; set; }
+    }
 }
+
+
