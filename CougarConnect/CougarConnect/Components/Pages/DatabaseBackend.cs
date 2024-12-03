@@ -2,6 +2,8 @@
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Text;
 
 public class SupabaseService
 {
@@ -29,7 +31,11 @@ public class SupabaseService
 
     public async Task PostData<T>(string tableName, T data)
     {
-        var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/rest/v1/{tableName}", data);
+        _httpClient.DefaultRequestHeaders.Add("Prefer", "return-representation");
+        _httpClient.DefaultRequestHeaders.Add("Prefer", "resolution=merge-duplicates");
+       var payload= System.Text.Json.JsonSerializer.Serialize(data);
+        var content = new StringContent(payload,Encoding.UTF8,"application/json");
+        var response = await _httpClient.PostAsync($"{BaseUrl}/rest/v1/Alumni", content);
         response.EnsureSuccessStatusCode();
     }
 }

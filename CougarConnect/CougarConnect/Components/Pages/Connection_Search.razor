@@ -7,7 +7,6 @@
 @using Supabase.Postgrest.Models
 @using System.Diagnostics
 @using Microsoft.Data.SqlClient
-
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
 <h3>Search Users</h3>
@@ -38,32 +37,43 @@ else
 
 @code {
 
+
     private string queryColumn = "First";
     private string[] options = ["First", "Last", "GradYear", "City", "Major", "Company"];
     private Item[] items;
     private string searchTerm = string.Empty;
+    private Item testuser = new Item();
+    public class Item
+    {
+        public long id { get; set; }
+        public string First { get; set; }
+        public string Last { get; set; }
+        public string GradYear { get; set; }
+        public string City { get; set; }
+        public string Major { get; set; }
+        public string Company { get; set; }
+        public long[] ConnectionList { get; set; }
+        public string Email { get; set; }
 
+    }
     protected override async Task OnInitializedAsync()
     {
+        testuser.First = "Cameron";
+        testuser.Last = "casebolt";
+        testuser.Major = "Software Engineering";
+        testuser.City = "pullman";
+        testuser.Company = "none";
+        testuser.GradYear = "2025";
+        testuser.Email = "cameron.caseolt@wsu.edu";
+        testuser.id = 20000;
+        testuser.ConnectionList = [1, 30];
+        await Supabase.PostData<Item>("Alumni", testuser);
 
     }
     protected async Task SearchUsers()
     {
         items = await Supabase.GetData<Item>(searchTerm,queryColumn);
     }
-    public class Item
-    {
-        public int Id { get; set; }
-        public string First { get; set; }
-        public string Last { get; set; }
-        public string GradYear { get;set;}
-        public string City { get; set; }
-        public string Major { get; set; }
-        public string Company { get; set; }
-        public int[] ConnectionList{ get; set; } 
 
-    }
 }
-
-
 
