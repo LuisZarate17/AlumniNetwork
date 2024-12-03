@@ -58,14 +58,13 @@ else
     }
     protected override async Task OnInitializedAsync()
     {
-        testuser.First = "Cameron";
-        testuser.Last = "casebolt";
+        testuser.First = "John";
+        testuser.Last = "Doe";
         testuser.Major = "Software Engineering";
         testuser.City = "pullman";
         testuser.Company = "none";
         testuser.GradYear = "2025";
         testuser.Email = "cameron.caseolt@wsu.edu";
-        testuser.id = 20000;
         testuser.ConnectionList = [1, 30];
         await Supabase.PostData<Item>("Alumni", testuser);
 
