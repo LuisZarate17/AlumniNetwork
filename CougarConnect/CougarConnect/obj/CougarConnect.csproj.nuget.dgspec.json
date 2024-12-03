@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
+    "C:\\Users\\elite\\OneDrive\\Documents\\GitHub\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {}
   },
   "projects": {
-    "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
+    "C:\\Users\\elite\\OneDrive\\Documents\\GitHub\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "projectUniqueName": "C:\\Users\\elite\\OneDrive\\Documents\\GitHub\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
         "projectName": "CougarConnect",
-        "projectPath": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
-        "packagesPath": "C:\\Users\\lagsp\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lagsp\\Source\\Repos\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
+        "projectPath": "C:\\Users\\elite\\OneDrive\\Documents\\GitHub\\AlumniNetwork\\CougarConnect\\CougarConnect\\CougarConnect.csproj",
+        "packagesPath": "C:\\Users\\elite\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\elite\\OneDrive\\Documents\\GitHub\\AlumniNetwork\\CougarConnect\\CougarConnect\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\lagsp\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\elite\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -94,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

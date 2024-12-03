@@ -10,7 +10,10 @@
 
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
+
 <h3>Search Users</h3>
+
+<!-- Search Form -->
 <select @bind="queryColumn">
     @foreach (var option in options)
     {
@@ -19,51 +22,140 @@
 </select>
 <input @bind="searchTerm" placeholder="Enter search term" />
 <button @onclick="SearchUsers">Search</button>
+
+<!-- Search Results -->
 @if (items != null && items.Any())
 {
     <ul>
         @foreach (var result in items)
         {
-            <li>@result.First - @result.Last - @result.Major-@result.GradYear-@result.Company-@result.City</li>
+            <li>
+                <button class="btn btn-link" @onclick="() => OnResultClick(result)">
+                    @result.First - @result.Last - @result.Major - @result.GradYear - @result.Company - @result.City
+                </button>
+            </li>
         }
     </ul>
 }
-
 else
-
 {
     <p>No results found.</p>
 }
 
+<!-- Modal for Connection Request -->
+@if (showModal)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connection Request</h5>
+                    <button type="button" class="close" @onclick="CloseModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to send a connection request to <strong>@selectedUser.First @selectedUser.Last</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">No</button>
+                    <button type="button" class="btn btn-primary" @onclick="OpenConnectionForm">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Connection Request Form -->
+@if (showConnectionForm)
+{
+    <div class="connection-form">
+        <h4>Fill out the Connection Request Form</h4>
+
+        <EditForm Model="@connectionRequest" OnValidSubmit="HandleConnectionRequestSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="requesterName" class="form-label">Your Name</label>
+                <InputText id="requesterName" class="form-control" @bind-Value="connectionRequest.RequesterName" />
+            </div>
+
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <InputTextArea id="message" class="form-control" @bind-Value="connectionRequest.Message" />
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Send Request</button>
+            </div>
+        </EditForm>
+    </div>
+}
 
 @code {
-
     private string queryColumn = "First";
-    private string[] options = ["First", "Last", "GradYear", "City", "Major", "Company"];
+    private string[] options = { "First", "Last", "GradYear", "City", "Major", "Company" };
     private Item[] items;
     private string searchTerm = string.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
+    private bool showModal = false;
+    private bool showConnectionForm = false;
+    private Item selectedUser; // Store the selected user
+    private ConnectionRequest connectionRequest = new ConnectionRequest();
 
-    }
     protected async Task SearchUsers()
     {
-        items = await Supabase.GetData<Item>(searchTerm,queryColumn);
+        items = await Supabase.GetData<Item>(searchTerm, queryColumn);
     }
+
+    private void OnResultClick(Item result)
+    {
+        selectedUser = result;
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        StateHasChanged();
+    }
+
+    private void OpenConnectionForm()
+    {
+        showModal = false; // Close the modal
+        showConnectionForm = true; // Show the connection request form
+        StateHasChanged(); // Ensure the UI updates
+    }
+
+    private void HandleConnectionRequestSubmit()
+    {
+        // Handle the connection request submission logic here (e.g., saving to a database or sending an email)
+        Console.WriteLine($"Connection request sent to {selectedUser.First} {selectedUser.Last} from {connectionRequest.RequesterName} with message: {connectionRequest.Message}");
+
+        // After submission, hide the form and show a success message or redirect the user
+        showConnectionForm = false;
+        connectionRequest = new ConnectionRequest(); // Reset the form
+        Console.WriteLine("Connection request submitted successfully!");
+        StateHasChanged();
+    }
+
     public class Item
     {
         public int Id { get; set; }
         public string First { get; set; }
         public string Last { get; set; }
-        public string GradYear { get;set;}
+        public string GradYear { get; set; }
         public string City { get; set; }
         public string Major { get; set; }
         public string Company { get; set; }
-        public int[] ConnectionList{ get; set; } 
+        public int[] ConnectionList { get; set; }
+    }
 
+    public class ConnectionRequest
+    {
+        public string RequesterName { get; set; }
+        public string Message { get; set; }
     }
 }
-
-
-

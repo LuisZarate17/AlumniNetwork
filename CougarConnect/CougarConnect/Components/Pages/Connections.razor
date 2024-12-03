@@ -3,62 +3,110 @@
 
 <PageTitle>Connections</PageTitle>
 
-<h1>Connections</h1>
+<h1>Alumni Connections</h1>
 
-<p>This is where you can find all the connections youve made.</p>
+<p>This is where you can find all the connections you've made.</p>
 
-@if (forecasts == null)
+@if (connections == null)
 {
     <p><em>Loading...</em></p>
+}
+else if (!connections.Any())
+{
+    <p>You currently have no connections.</p>
 }
 else
 {
     <table class="table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>First name</th>
-                <th>Last name</th>
-                <th>industry</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Major</th>
+                <th>Graduation Year</th>
+                <th>Company</th>
+                <th>City</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var connection in connections)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@connection.First</td>
+                    <td>@connection.Last</td>
+                    <td>@connection.Major</td>
+                    <td>@connection.GradYear</td>
+                    <td>@connection.Company</td>
+                    <td>@connection.City</td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
+<!-- Outgoing Connection Requests -->
+<h3>Outgoing Connection Requests</h3>
+@if (outgoingRequests.Any())
+{
+    <ul>
+        @foreach (var request in outgoingRequests)
+        {
+            <li>
+                @request.FirstName @request.LastName - @request.Status
+                <button class="btn btn-warning" @onclick="() => RetractRequest(request)">Retract</button>
+                <button class="btn btn-danger" @onclick="() => DeleteRequest(request)">Delete</button>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No outgoing connection requests.</p>
+}
+
 @code {
-    private WeatherForecast[]? forecasts;
+    private List<Connection> connections;
+    private List<ConnectionRequest> outgoingRequests = new List<ConnectionRequest>();
 
     protected override async Task OnInitializedAsync()
     {
         // Simulate asynchronous loading to demonstrate streaming rendering
         await Task.Delay(500);
 
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = startDate.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = summaries[Random.Shared.Next(summaries.Length)]
-            }).ToArray();
+        // Load the user's connections (initially empty)
+        connections = new List<Connection>();
+        // Load the user's outgoing connection requests (initially empty)
+        outgoingRequests = new List<ConnectionRequest>();
     }
 
-    private class WeatherForecast
+    private void RetractRequest(ConnectionRequest request)
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        request.Status = "Retracted";
+        StateHasChanged();
+    }
+
+    private void DeleteRequest(ConnectionRequest request)
+    {
+        outgoingRequests.Remove(request);
+        StateHasChanged();
+    }
+
+    public class Connection
+    {
+        public string First { get; set; }
+        public string Last { get; set; }
+        public string Major { get; set; }
+        public string GradYear { get; set; }
+        public string Company { get; set; }
+        public string City { get; set; }
+    }
+
+    public class ConnectionRequest
+    {
+        public string RequesterName { get; set; }
+        public string Message { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Status { get; set; } // Pending, Accepted, Rejected, Retracted
     }
 }
