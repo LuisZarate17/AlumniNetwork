@@ -9,7 +9,10 @@
 @using Microsoft.Data.SqlClient
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
+
 <h3>Search Users</h3>
+
+<!-- Search Form -->
 <select @bind="queryColumn">
     @foreach (var option in options)
     {
@@ -18,31 +21,146 @@
 </select>
 <input @bind="searchTerm" placeholder="Enter search term" />
 <button @onclick="SearchUsers">Search</button>
+
+<!-- Search Results -->
 @if (items != null && items.Any())
 {
     <ul>
         @foreach (var result in items)
         {
-            <li>@result.First - @result.Last - @result.Major-@result.GradYear-@result.Company-@result.City</li>
+            <li>
+                <button class="btn btn-link" @onclick="() => OnResultClick(result)">
+                    @result.First - @result.Last - @result.Major - @result.GradYear - @result.Company - @result.City
+                </button>
+            </li>
         }
     </ul>
 }
-
 else
-
 {
     <p>No results found.</p>
 }
 
+<!-- Modal for Connection Request -->
+@if (showModal)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connection Request</h5>
+                    <button type="button" class="close" @onclick="CloseModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to send a connection request to <strong>@selectedUser.First @selectedUser.Last</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">No</button>
+                    <button type="button" class="btn btn-primary" @onclick="OpenConnectionForm">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal for Connection Request Form -->
+@if (showConnectionForm)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Connection Request Form</h5>
+                    <button type="button" class="close" @onclick="CloseConnectionForm" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@connectionRequest" OnValidSubmit="HandleConnectionRequestSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label for="requesterName" class="form-label">Your Name</label>
+                            <InputText id="requesterName" class="form-control" @bind-Value="connectionRequest.RequesterName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <InputTextArea id="message" class="form-control" @bind-Value="connectionRequest.Message" />
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Send Request</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Error Message Modal -->
+@if (showErrorMessage)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Error</h5>
+                    <button type="button" class="close" @onclick="CloseErrorMessage" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Error: Information not submitted. Please fill out all fields.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="CloseErrorMessage">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Confirmation Message Modal -->
+@if (showConfirmationMessage)
+{
+    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Success</h5>
+                    <button type="button" class="close" @onclick="CloseConfirmationMessage" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Connection request sent successfully!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="CloseConfirmationMessage">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-
-
     private string queryColumn = "First";
-    private string[] options = ["First", "Last", "GradYear", "City", "Major", "Company"];
+    private string[] options = { "First", "Last", "GradYear", "City", "Major", "Company" };
     private Item[] items;
     private string searchTerm = string.Empty;
-    private Item testuser = new Item();
+
+    private bool showModal = false;
+    private bool showConnectionForm = false; // Toggle visibility of the connection form
+    private bool showErrorMessage = false; // Toggle visibility of the error message
+    private bool showConfirmationMessage = false; // Toggle visibility of the confirmation message
+    private Item selectedUser; // Store the selected user
+    private ConnectionRequest connectionRequest = new ConnectionRequest();
+
     public class Item
     {
         public long id { get; set; }
@@ -54,25 +172,78 @@ else
         public string Company { get; set; }
         public long[] ConnectionList { get; set; }
         public string Email { get; set; }
-
     }
-    protected override async Task OnInitializedAsync()
-    {
-        testuser.First = "John";
-        testuser.Last = "Doe";
-        testuser.Major = "Software Engineering";
-        testuser.City = "pullman";
-        testuser.Company = "none";
-        testuser.GradYear = "2025";
-        testuser.Email = "cameron.caseolt@wsu.edu";
-        testuser.ConnectionList = [1, 30];
-        await Supabase.PostData<Item>("Alumni", testuser);
 
-    }
     protected async Task SearchUsers()
     {
-        items = await Supabase.GetData<Item>(searchTerm,queryColumn);
+        items = await Supabase.GetData<Item>(searchTerm, queryColumn);
     }
 
+    private void OnResultClick(Item result)
+    {
+        selectedUser = result;
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        StateHasChanged();
+    }
+
+    private void OpenConnectionForm()
+    {
+        showModal = false; // Close the modal
+        showConnectionForm = true; // Show the connection request form
+        StateHasChanged(); // Ensure the UI updates
+    }
+
+    private void CloseConnectionForm()
+    {
+        showConnectionForm = false;
+        StateHasChanged();
+    }
+
+    private void CloseErrorMessage()
+    {
+        showErrorMessage = false;
+        StateHasChanged();
+    }
+
+    private void CloseConfirmationMessage()
+    {
+        showConfirmationMessage = false;
+        StateHasChanged();
+    }
+
+    private void HandleConnectionRequestSubmit()
+    {
+        // Check if any fields are empty
+        if (string.IsNullOrWhiteSpace(connectionRequest.RequesterName) || string.IsNullOrWhiteSpace(connectionRequest.Message))
+        {
+            // Show error message if any fields are empty
+            showErrorMessage = true;
+        }
+        else
+        {
+            // Handle the connection request submission logic here
+            Console.WriteLine($"Connection request sent to {selectedUser.First} {selectedUser.Last} from {connectionRequest.RequesterName} with message: {connectionRequest.Message}");
+
+            // After submission, hide the form and show a success message
+            showConnectionForm = false;
+            showConfirmationMessage = true; // Show confirmation message
+            connectionRequest = new ConnectionRequest(); // Reset the form
+            Console.WriteLine("Connection request submitted successfully!");
+        }
+        StateHasChanged();
+    }
+
+    public class ConnectionRequest
+    {
+        public string RequesterName { get; set; }
+        public string Message { get; set; }
+    }
 }
+
 
