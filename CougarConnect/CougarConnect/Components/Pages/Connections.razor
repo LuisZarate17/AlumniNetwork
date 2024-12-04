@@ -1,64 +1,107 @@
-﻿@page "/Connections"
+@page "/Connections"
 @attribute [StreamRendering]
 
 <PageTitle>Connections</PageTitle>
 
 <h1>Connections</h1>
 
-<p>This is where you can find all the connections youve made.</p>
+<p>This is where you can view your snet connection requests.</p>
 
-@if (forecasts == null)
+@if (allConnections == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>First name</th>
-                <th>Last name</th>
-                <th>industry</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
+    <h2>Connections</h2>
+    @if (allConnections.Any())
+    {
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Industry</th>
+                    <th>City</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var connection in allConnections)
+                {
+                    <tr>
+                        <td>@connection.RequestDate.ToShortDateString()</td>
+                        <td>@connection.FullName</td>
+                        <td>@connection.Industry</td>
+                        <td>@connection.City</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No connections at the moment.</p>
+    }
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private List<ConnectionRequest>? allConnections;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
+        // Simulate asynchronous loading of connection requests
         await Task.Delay(500);
 
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = startDate.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = summaries[Random.Shared.Next(summaries.Length)]
-            }).ToArray();
+        // Generate random data
+        var acceptedRequests = GenerateRandomRequests(3, "Accepted");
+        var declinedRequests = GenerateRandomRequests(2, "Declined");
+
+        // Combine accepted and declined into allConnections
+        allConnections = acceptedRequests.Concat(declinedRequests).ToList();
     }
 
-    private class WeatherForecast
+    private List<ConnectionRequest> GenerateRandomRequests(int count, string status)
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        var random = new Random();
+        var industries = new[] { "Software", "Finance", "Healthcare", "Education", "Engineering" };
+        var cities = new[] { "Pullman", "Seattle", "Spokane", "Richland", "Tacoma" };
+
+        var requests = new List<ConnectionRequest>();
+        for (int i = 0; i < count; i++)
+        {
+            var firstName = GenerateRandomName();
+            var lastName = GenerateRandomName();
+            requests.Add(new ConnectionRequest
+                {
+                    Id = i + 1,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    FullName = $"{firstName} {lastName}",
+                    RequestDate = DateTime.Now.AddDays(-random.Next(1, 10)),
+                    Industry = industries[random.Next(industries.Length)],
+                    City = cities[random.Next(cities.Length)],
+                    Status = status
+                });
+        }
+        return requests;
+    }
+
+    private string GenerateRandomName()
+    {
+        var names = new[] { "John", "Jane", "Bob", "Alice" };
+        var random = new Random();
+        return names[random.Next(names.Length)];
+    }
+
+    private class ConnectionRequest
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string FullName { get; set; } // Combined Name
+        public DateTime RequestDate { get; set; }
+        public string Industry { get; set; }
+        public string City { get; set; }
+        public string Status { get; set; } // Accepted/Declined
     }
 }

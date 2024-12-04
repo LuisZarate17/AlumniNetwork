@@ -42,15 +42,33 @@
                 <label for="confirm-password">Confirm Password</label>
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
+            <div class="form-floating mb-3">
+                <InputText type="first" @bind-Value="Input.FirstName" class="form-control" autocomplete="first-name" aria-required="true" placeholder="John" />
+                <label for="first-name">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="last" @bind-Value="Input.LastName" class="form-control" autocomplete="last-name" aria-required="true" placeholder="Doe" />
+                <label for="last-name">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+				<InputText type="city" @bind-Value="Input.City" class="form-control" autocomplete="city" aria-required="true" placeholder="Provo" />
+				<label for="city">City</label>
+				<ValidationMessage For="() => Input.City" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="major" @bind-Value="Input.Major" class="form-control" autocomplete="major" aria-required="true" placeholder="Computer Science" />
+                <label for="major">Major</label>
+                <ValidationMessage For="() => Input.Major" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="grad-year" @bind-Value="Input.GradYear" class="form-control" autocomplete="grad-year" aria-required="true" placeholder="2023" />
+				<label for="grad-year">Graduation Year</label>
+				<ValidationMessage For="() => Input.GradYear" class="text-danger" />
+            </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
     </div>
 </div>
 
@@ -88,8 +106,10 @@
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+            Console.WriteLine("Confirmation code: %s", code);
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
+
 
         if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
@@ -141,5 +161,35 @@
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Text)]
+        [StringLength(100, ErrorMessage = "{0} must be at least {2} characters long.", MinimumLength = 2)]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "{0} must be at least {2} characters long.", MinimumLength = 2)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = "";
+
+        [Required]
+        [StringLength(25, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [DataType(DataType.Text)]
+        [Display(Name = "City")]
+        public string City { get; set; } = "";
+
+        [Required]
+        [StringLength(30, ErrorMessage = "{0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Major")]
+        public string Major { get; set; } = "";
+
+        [Required]
+        [StringLength(4, ErrorMessage = "Your {0} must be {1} characters long.", MinimumLength = 4)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Graduation Year")]
+        public string GradYear { get; set; } = "";
     }
 }
