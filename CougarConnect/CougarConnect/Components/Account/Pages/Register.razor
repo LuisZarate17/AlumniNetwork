@@ -14,6 +14,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject SupabaseService DBService
 
 <PageTitle>Register</PageTitle>
 
@@ -75,6 +76,21 @@
 @code {
     private IEnumerable<IdentityError>? identityErrors;
 
+    public class Item(long newid, string newFirst, string newLast, 
+        string newGradYear, string newCity, string newMajor, string newCompany,
+        long[] newConnections, string newEmail)
+    {
+        public long id { get; set; } = newid;
+        public string First { get; set; } = newFirst;
+        public string Last { get; set; } = newLast;
+        public string GradYear { get; set; } = newGradYear;
+        public string City { get; set; } = newCity;
+        public string Major { get; set; } = newMajor;
+        public string? Company { get; set; } = newCompany;
+        public long[]? ConnectionList { get; set; } = newConnections;
+        public string Email { get; set; } = newEmail;
+    }
+
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -98,6 +114,14 @@
             return;
         }
 
+        var random = new Random();
+        var newUserID = random.Next(10000, 100000);
+
+        Item newUserDBEntry = new Item(newUserID, Input.FirstName, Input.LastName,
+            Input.GradYear, Input.City, Input.Major, "student", Array.Empty<long>(), Input.Email);
+
+        await DBService.PostData<Item>("Alumni", newUserDBEntry);
+
         Logger.LogInformation("User created a new account with password.");
 
         var userId = await UserManager.GetUserIdAsync(user);
@@ -109,7 +133,6 @@
             Console.WriteLine("Confirmation code: %s", code);
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
-
 
         if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {

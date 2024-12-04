@@ -1,5 +1,6 @@
 using CougarConnect.Components;
 using CougarConnect.Components.Account;
+using CougarConnect.Components.Pages;
 using CougarConnect.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,10 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped(sp => new SupabaseService(new HttpClient()));
+
+
+
 
 builder.Services.AddAuthentication(options =>
     {

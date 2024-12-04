@@ -1,233 +1,78 @@
 ﻿@page "/Connection_Search"
+@attribute [StreamRendering]
+@rendermode InteractiveServer
 @using System.Text.Json
 @using Supabase
 @using Supabase.Postgrest.Attributes
 @using Supabase.Postgrest.Models
-
+@using System.Diagnostics
+@using Microsoft.Data.SqlClient
 @inject NavigationManager NavigationManager
-
-<PageTitle>Connection Search</PageTitle>
-
-<h3>Search for an WSU Alumni Connection</h3>
-
-<p>Search for alumni connections by entering one or multiple criteria:</p>
-
-<div class="search-container">
-    <div class="mb-3">
-        <label for="searchMajor" class="form-label">Major</label>
-        <input type="text" class="form-control" id="searchMajor" @bind="Major" placeholder="Enter Major">
-    </div>
-    <div class="mb-3">
-        <label for="searchGradYear" class="form-label">Graduation Year</label>
-        <input type="text" class="form-control" id="searchGradYear" @bind="GradYear" placeholder="Enter Graduation Year">
-    </div>
-    <div class="mb-3">
-        <label for="searchCompany" class="form-label">Company</label>
-        <input type="text" class="form-control" id="searchCompany" @bind="Company" placeholder="Enter Company">
-    </div>
-    <div class="mb-3">
-        <label for="searchCity" class="form-label">City</label>
-        <input type="text" class="form-control" id="searchCity" @bind="City" placeholder="Enter City">
-    </div>
-    
-    <button type="button" class="btn btn-primary" @onclick="PerformSearch">Search</button>
-
-</div>
-
-@if (IsLoading) { <p>Loading...</p> }
-
-@if (AlumniResults.Any())
-
+@inject SupabaseService Supabase
+<h3>Search Users</h3>
+<select @bind="queryColumn">
+    @foreach (var option in options)
+    {
+        <option value="@option">@option</option>
+    }
+</select>
+<input @bind="searchTerm" placeholder="Enter search term" />
+<button @onclick="SearchUsers">Search</button>
+@if (items != null && items.Any())
 {
-    <table class="table table-striped mt-3">
-        <thead>
-            <tr>
-                <th>First</th>
-                <th>Last</th>
-                <th>Major</th>
-                <th>City</th>
-                <th>Company</th>
-                <th>Graduation Year</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var alum in AlumniResults)
-
-            {
-                <tr>
-                    <td>@alum.First</td>
-                    <td>@alum.Last</td>
-                    <td>@alum.Major</td>
-                    <td>@alum.City</td>
-                    <td>@alum.Company</td>
-                    <td>@alum.GradYear</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <ul>
+        @foreach (var result in items)
+        {
+            <li>@result.First - @result.Last - @result.Major-@result.GradYear-@result.Company-@result.City</li>
+        }
+    </ul>
 }
 
-else if (!IsLoading && !AlumniResults.Any() && Searched)
+else
 
 {
     <p>No results found.</p>
 }
 
+
 @code {
 
-    // Input fields
-    private string Major { get; set; } = string.Empty;
-    private string GradYear { get; set; } = string.Empty;
-    private string Company { get; set; } = string.Empty;
-    private string City { get; set; } = string.Empty;
 
-
-
-    // Search results
-
-    private List<Alumni> AlumniResults { get; set; } = new();
-
-    private bool IsLoading { get; set; } = false;
-
-    private bool Searched { get; set; } = false;
-
-
-
-    // Supabase client initialization
-
-    private readonly string url = "https://jcbbunghgiboiqzljfyt.supabase.co";
-
-    private readonly string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjYmJ1bmdoZ2lib2lxemxqZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAxNDYzMzUsImV4cCI6MjA0NTcyMjMzNX0.8-yEGxWkQ-c9zn3XSn_4EouHeiUk5qZCSbHkyOIRPUI";
-
-    private Supabase.Client supabase;
-
-
-
-    // Alumni model
-
-    [Table("Alumni")]
-
-    class Alumni : BaseModel
-
+    private string queryColumn = "First";
+    private string[] options = ["First", "Last", "GradYear", "City", "Major", "Company"];
+    private Item[] items;
+    private string searchTerm = string.Empty;
+    private Item testuser = new Item();
+    public class Item
     {
-
-        [PrimaryKey("Id")]
-
-        public int Id { get; set; }
-
-
-
-        [Column("First")]
-
+        public long id { get; set; }
         public string First { get; set; }
-
-
-
-        [Column("Last")]
-
         public string Last { get; set; }
-
-
-
-        [Column("GradYear")]
-
         public string GradYear { get; set; }
-
-
-
-        [Column("City")]
-
         public string City { get; set; }
-
-
-
-        [Column("Major")]
-
         public string Major { get; set; }
-
-
-
-        [Column("Company")]
-
         public string Company { get; set; }
+        public long[] ConnectionList { get; set; }
+        public string Email { get; set; }
 
     }
-
-
-
     protected override async Task OnInitializedAsync()
-
     {
-
-        var options = new Supabase.SupabaseOptions { AutoConnectRealtime = true };
-
-        supabase = new Supabase.Client(url, key, options);
-
-        await supabase.InitializeAsync();
+        testuser.First = "John";
+        testuser.Last = "Doe";
+        testuser.Major = "Software Engineering";
+        testuser.City = "pullman";
+        testuser.Company = "none";
+        testuser.GradYear = "2025";
+        testuser.Email = "cameron.caseolt@wsu.edu";
+        testuser.ConnectionList = [1, 30];
+        await Supabase.PostData<Item>("Alumni", testuser);
 
     }
-
-
-
-    private async Task PerformSearch()
-
+    protected async Task SearchUsers()
     {
-
-        IsLoading = true;
-
-        Searched = false;
-
-        AlumniResults.Clear();
-
-
-
-        try
-
-        {
-
-            // Combine inputs into a single keyword
-
-            var keyword = $"{Major} {GradYear} {Company} {City}".Trim();
-
-
-
-            // Call Supabase RPC function
-
-            var alum = await supabase.Rpc("engine", new { keyword });
-
-
-
-            // Deserialize results
-
-            if (alum.Content != null && alum.Content.Length > 0)
-
-            {
-
-                AlumniResults = JsonSerializer.Deserialize<List<Alumni>>(alum.Content);
-
-                Console.WriteLine("tada");
-
-            }
-
-        }
-
-        catch (Exception ex)
-
-        {
-
-            Console.WriteLine($"Error: {ex.Message}");
-
-        }
-
-        finally
-
-        {
-
-            IsLoading = false;
-
-            Searched = true;
-
-        }
-
+        items = await Supabase.GetData<Item>(searchTerm,queryColumn);
     }
+
 }
+
