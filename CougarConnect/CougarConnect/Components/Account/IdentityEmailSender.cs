@@ -6,7 +6,6 @@ using System.Net.Mail;
 
 namespace CougarConnect.Components.Account
 {
-    // Remove the "else if (EmailSender is IdentityNoOpEmailSender)" block from RegisterConfirmation.razor after updating with a real implementation.
     internal sealed class IdentityEmailSender : IEmailSender<ApplicationUser>
     {
         private readonly EmailSender emailSender = new();
