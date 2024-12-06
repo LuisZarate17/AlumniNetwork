@@ -2,13 +2,25 @@
 @attribute [StreamRendering]
 @rendermode InteractiveServer
 @using System.Text.Json
+@using System.Net;
+@using System.Net.Mail;
+@using System.Net.Mime;
 @using Supabase
 @using Supabase.Postgrest.Attributes
 @using Supabase.Postgrest.Models
 @using System.Diagnostics
 @using Microsoft.Data.SqlClient
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@using CougarConnect.Data
+@using CougarConnect.Components.Account
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IEmailSender<ApplicationUser> EmailSender
+
 
 <h3>Search Users</h3>
 
@@ -83,8 +95,8 @@ else
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <label for="requesterName" class="form-label">Your Name</label>
-                            <InputText id="requesterName" class="form-control" @bind-Value="connectionRequest.RequesterName" />
+                            <label for="RequestSubject" class="form-label">Request Subject</label>
+                            <InputText id="requestSubject" class="form-control" @bind-Value="connectionRequest.RequestSubject" />
                         </div>
 
                         <div class="mb-3">
@@ -93,6 +105,7 @@ else
                         </div>
 
                         <div class="mb-3">
+                            <p>"You may only send one request per Alumni, make it count!"</p>
                             <button type="submit" class="btn btn-primary">Send Request</button>
                         </div>
                     </EditForm>
@@ -160,6 +173,8 @@ else
     private bool showConfirmationMessage = false; // Toggle visibility of the confirmation message
     private Item selectedUser; // Store the selected user
     private ConnectionRequest connectionRequest = new ConnectionRequest();
+    private string currentUserEmail;
+    private Item currentUser;
 
     public class Item
     {
@@ -172,6 +187,20 @@ else
         public string Company { get; set; }
         public long[] ConnectionList { get; set; }
         public string Email { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            currentUserEmail = user.Identity.Name;
+            await Supabase.GetData<Item>(user.Identity.Name, "Email").ContinueWith(task =>
+            {
+                currentUser = task.Result.FirstOrDefault();
+            });
+        }
     }
 
     protected async Task SearchUsers()
@@ -220,7 +249,7 @@ else
     private void HandleConnectionRequestSubmit()
     {
         // Check if any fields are empty
-        if (string.IsNullOrWhiteSpace(connectionRequest.RequesterName) || string.IsNullOrWhiteSpace(connectionRequest.Message))
+        if (string.IsNullOrWhiteSpace(connectionRequest.RequestSubject) || string.IsNullOrWhiteSpace(connectionRequest.Message))
         {
             // Show error message if any fields are empty
             showErrorMessage = true;
@@ -228,11 +257,47 @@ else
         else
         {
             // Handle the connection request submission logic here
-            Console.WriteLine($"Connection request sent to {selectedUser.First} {selectedUser.Last} from {connectionRequest.RequesterName} with message: {connectionRequest.Message}");
+            Console.WriteLine($"Connection request sent to {selectedUser.First} {selectedUser.Last} from {currentUser.First} {currentUser.Last} with message: \n{connectionRequest.RequestSubject}: \n{connectionRequest.Message}");
 
             // After submission, hide the form and show a success message
             showConnectionForm = false;
             showConfirmationMessage = true; // Show confirmation message
+
+            string message = connectionRequest.Message;
+
+            //Send email
+            try
+            {
+
+                SmtpClient mySmtpClient = new SmtpClient("smtp.gmail.com", 587)
+                {
+                    EnableSsl = true,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential("wsucougarconnect@gmail.com", "wmqe mbgb mfvc gqpq")
+                };
+
+                var EmailMessage = new MailMessage
+                (from: "wsucougarconnect@gmail.com",
+                to: selectedUser.Email,
+                subject: $"Cougar Connect Request: {connectionRequest.RequestSubject}",
+                body: $"{message}\n\nThe following request was sent on behalf of a WSU student ({currentUser.First} {currentUser.Last}) seeking a connection\nIf you would like to reply to the request their email address is: {currentUser.Email}\n\nTo be removed from this site and no longer recieve requests follow the link below");
+
+
+                mySmtpClient.SendMailAsync(EmailMessage);
+            }
+
+            catch (SmtpException ex)
+            {
+                throw new ApplicationException
+                  ("SmtpException has occured: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            Supabase.AddConnection(selectedUser.id, currentUser.id);
+
             connectionRequest = new ConnectionRequest(); // Reset the form
             Console.WriteLine("Connection request submitted successfully!");
         }
@@ -241,9 +306,7 @@ else
 
     public class ConnectionRequest
     {
-        public string RequesterName { get; set; }
+        public string RequestSubject { get; set; }
         public string Message { get; set; }
     }
 }
-
-

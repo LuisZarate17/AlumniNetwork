@@ -120,6 +120,7 @@
         Item newUserDBEntry = new Item(newUserID, Input.FirstName, Input.LastName,
             Input.GradYear, Input.City, Input.Major, "student", Array.Empty<long>(), Input.Email);
 
+        // Log new user to supabase DB
         await DBService.PostData<Item>("Alumni", newUserDBEntry);
 
         Logger.LogInformation("User created a new account with password.");

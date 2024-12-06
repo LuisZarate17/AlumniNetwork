@@ -1,11 +1,17 @@
 @page "/Connections"
 @attribute [StreamRendering]
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using CougarConnect.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject SupabaseService DBService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Connections</PageTitle>
 
 <h1>Connections</h1>
 
-<p>This is where you can view your snet connection requests.</p>
+<p>This is where you can view your sent connection requests.</p>
 
 @if (allConnections == null)
 {
@@ -19,20 +25,22 @@ else
         <table class="table">
             <thead>
                 <tr>
-                    <th>Date</th>
                     <th>Name</th>
-                    <th>Industry</th>
+                    <th>Grad Year</th>
                     <th>City</th>
+                    <th>Mojor</th>
+                    <th>Company</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var connection in allConnections)
                 {
                     <tr>
-                        <td>@connection.RequestDate.ToShortDateString()</td>
-                        <td>@connection.FullName</td>
-                        <td>@connection.Industry</td>
+                        <td>@connection.First @connection.Last</td>
+                        <td>@connection.GradYear</td>
                         <td>@connection.City</td>
+                        <td>@connection.Major</td>
+                        <td>@connection.Company</td>
                     </tr>
                 }
             </tbody>
@@ -45,63 +53,39 @@ else
 }
 
 @code {
-    private List<ConnectionRequest>? allConnections;
+    private List<Item> allConnections = new List<Item>();
+    Item currentUser;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading of connection requests
-        await Task.Delay(500);
-
-        // Generate random data
-        var acceptedRequests = GenerateRandomRequests(3, "Accepted");
-        var declinedRequests = GenerateRandomRequests(2, "Declined");
-
-        // Combine accepted and declined into allConnections
-        allConnections = acceptedRequests.Concat(declinedRequests).ToList();
-    }
-
-    private List<ConnectionRequest> GenerateRandomRequests(int count, string status)
-    {
-        var random = new Random();
-        var industries = new[] { "Software", "Finance", "Healthcare", "Education", "Engineering" };
-        var cities = new[] { "Pullman", "Seattle", "Spokane", "Richland", "Tacoma" };
-
-        var requests = new List<ConnectionRequest>();
-        for (int i = 0; i < count; i++)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
         {
-            var firstName = GenerateRandomName();
-            var lastName = GenerateRandomName();
-            requests.Add(new ConnectionRequest
+            var result = await DBService.GetData<Item>(user.Identity.Name, "Email");
+            currentUser = result.FirstOrDefault();
+
+            if (currentUser != null)
+            {
+                foreach (var connection in currentUser.ConnectionList)
                 {
-                    Id = i + 1,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    FullName = $"{firstName} {lastName}",
-                    RequestDate = DateTime.Now.AddDays(-random.Next(1, 10)),
-                    Industry = industries[random.Next(industries.Length)],
-                    City = cities[random.Next(cities.Length)],
-                    Status = status
-                });
+                    var connectionResult = await DBService.GetData<Item>(connection.ToString(), "id");
+                    allConnections.Add(connectionResult.FirstOrDefault());
+                }
+            }
         }
-        return requests;
     }
 
-    private string GenerateRandomName()
+    public class Item
     {
-        var names = new[] { "John", "Jane", "Bob", "Alice" };
-        var random = new Random();
-        return names[random.Next(names.Length)];
-    }
-
-    private class ConnectionRequest
-    {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string FullName { get; set; } // Combined Name
-        public DateTime RequestDate { get; set; }
-        public string Industry { get; set; }
+        public long id { get; set; }
+        public string First { get; set; }
+        public string Last { get; set; }
+        public string GradYear { get; set; }
         public string City { get; set; }
-        public string Status { get; set; } // Accepted/Declined
+        public string Major { get; set; }
+        public string Company { get; set; }
+        public long[] ConnectionList { get; set; }
+        public string Email { get; set; }
     }
 }

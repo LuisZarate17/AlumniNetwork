@@ -50,20 +50,24 @@ public class SupabaseService
         idnew++;
         return idnew;
     }
-    public async void AddConnection(int connectionId,string userId)
+    public async void AddConnection(long connectionId, long userId)
     {
-        Item User;
-        var encodedSearch = System.Net.WebUtility.UrlEncode($"ilike.%userId%");
-        var url = $"{BaseUrl}/rest/v1/Alumni?id={encodedSearch}";
+        Item[] User;
+        var encodedSearch = System.Net.WebUtility.UrlEncode($"ilike.%{userId}%");
+        var url = $"{BaseUrl}/rest/v1/Alumni?id=eq.{userId}";
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();  // Throw an exception if the response is not successful
 
-        User = await response.Content.ReadFromJsonAsync<Item>();
-        List<long> temp = User.ConnectionList.ToList();
-        temp.Add(connectionId);
-        User.ConnectionList = temp.ToArray();
-        PostData<Item>("Alumni", User);
+        User = await response.Content.ReadFromJsonAsync<Item[]>();
+        List<long> temp = User[0].ConnectionList.ToList();
+        if (temp.Contains(connectionId) != true)
+        {
+            temp.Add(connectionId);
+            User[0].ConnectionList = temp.ToArray();
+        }
+
+        await PostData<Item>("Alumni", User[0]);
     }
     public class Item
     {
