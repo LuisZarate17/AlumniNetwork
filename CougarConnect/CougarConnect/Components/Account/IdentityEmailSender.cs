@@ -8,7 +8,12 @@ namespace CougarConnect.Components.Account
 {
     internal sealed class IdentityEmailSender : IEmailSender<ApplicationUser>
     {
-        private readonly EmailSender emailSender = new();
+        private readonly IEmailSender emailSender;
+
+        public IdentityEmailSender(IEmailSender emailSender)
+        {
+            this.emailSender = emailSender;
+        }
 
         public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
             emailSender.SendEmailAsync(email, "Confirm your email", $"Welcome to Cougar Connect! \nPlease confirm your account email by following the link below \n\n{confirmationLink}");

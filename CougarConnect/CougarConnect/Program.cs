@@ -18,7 +18,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-builder.Services.AddScoped(sp => new SupabaseService(new HttpClient()));
+builder.Services.AddScoped(sp => new SupabaseService(new HttpClient(), sp.GetRequiredService<IConfiguration>()));
 
 builder.Services.AddAuthentication(options =>
     {

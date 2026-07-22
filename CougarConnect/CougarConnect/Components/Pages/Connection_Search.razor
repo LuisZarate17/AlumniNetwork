@@ -1,25 +1,15 @@
 ﻿@page "/Connection_Search"
 @attribute [StreamRendering]
 @rendermode InteractiveServer
-@using System.Text.Json
-@using System.Net;
-@using System.Net.Mail;
-@using System.Net.Mime;
-@using Supabase
-@using Supabase.Postgrest.Attributes
-@using Supabase.Postgrest.Models
-@using System.Diagnostics
-@using Microsoft.Data.SqlClient
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.WebUtilities
 @using CougarConnect.Data
 @using CougarConnect.Components.Account
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IEmailSender<ApplicationUser> EmailSender
+@inject IEmailSender EmailSender
 
 
 <h3>Search Users</h3>
@@ -246,7 +236,7 @@ else
         StateHasChanged();
     }
 
-    private void HandleConnectionRequestSubmit()
+    private async Task HandleConnectionRequestSubmit()
     {
         // Check if any fields are empty
         if (string.IsNullOrWhiteSpace(connectionRequest.RequestSubject) || string.IsNullOrWhiteSpace(connectionRequest.Message))
@@ -256,50 +246,18 @@ else
         }
         else
         {
-            // Handle the connection request submission logic here
-            Console.WriteLine($"Connection request sent to {selectedUser.First} {selectedUser.Last} from {currentUser.First} {currentUser.Last} with message: \n{connectionRequest.RequestSubject}: \n{connectionRequest.Message}");
-
             // After submission, hide the form and show a success message
             showConnectionForm = false;
             showConfirmationMessage = true; // Show confirmation message
 
             string message = connectionRequest.Message;
 
-            //Send email
-            try
-            {
-
-                SmtpClient mySmtpClient = new SmtpClient("smtp.gmail.com", 587)
-                {
-                    EnableSsl = true,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential("wsucougarconnect@gmail.com", "wmqe mbgb mfvc gqpq")
-                };
-
-                var EmailMessage = new MailMessage
-                (from: "wsucougarconnect@gmail.com",
-                to: selectedUser.Email,
-                subject: $"Cougar Connect Request: {connectionRequest.RequestSubject}",
-                body: $"{message}\n\nThe following request was sent on behalf of a WSU student ({currentUser.First} {currentUser.Last}) seeking a connection\nIf you would like to reply to the request their email address is: {currentUser.Email}\n\nTo be removed from this site and no longer recieve requests follow the link below");
-
-
-                mySmtpClient.SendMailAsync(EmailMessage);
-            }
-
-            catch (SmtpException ex)
-            {
-                throw new ApplicationException
-                  ("SmtpException has occured: " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            var body = $"{message}\n\nThe following request was sent on behalf of a WSU student ({currentUser.First} {currentUser.Last}) seeking a connection\nIf you would like to reply to the request their email address is: {currentUser.Email}\n\nTo be removed from this site and no longer recieve requests follow the link below";
+            await EmailSender.SendEmailAsync(selectedUser.Email, $"Cougar Connect Request: {connectionRequest.RequestSubject}", body);
 
             Supabase.AddConnection(selectedUser.id, currentUser.id);
 
             connectionRequest = new ConnectionRequest(); // Reset the form
-            Console.WriteLine("Connection request submitted successfully!");
         }
         StateHasChanged();
     }

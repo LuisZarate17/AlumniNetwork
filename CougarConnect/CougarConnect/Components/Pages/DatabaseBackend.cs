@@ -1,22 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using System.Text.Json.Serialization;
 using System.Text;
 
 public class SupabaseService
 {
     private readonly HttpClient _httpClient;
-    private const string BaseUrl = "https://jcbbunghgiboiqzljfyt.supabase.co";
-    private const string ApiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjYmJ1bmdoZ2lib2lxemxqZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAxNDYzMzUsImV4cCI6MjA0NTcyMjMzNX0.8-yEGxWkQ-c9zn3XSn_4EouHeiUk5qZCSbHkyOIRPUI";
+    private readonly string BaseUrl;
 
-
-    public SupabaseService(HttpClient httpClient)
+    public SupabaseService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _httpClient.DefaultRequestHeaders.Add("apikey", ApiKey);
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {ApiKey}");
+        BaseUrl = configuration["Supabase:Url"];
+        var apiKey = configuration["Supabase:ApiKey"];
+        _httpClient.DefaultRequestHeaders.Add("apikey", apiKey);
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
     }
 
     public async Task<T[]> GetData<T>(string term,string column)
@@ -38,17 +36,6 @@ public class SupabaseService
         var content = new StringContent(payload,Encoding.UTF8,"application/json");
         var response = await _httpClient.PostAsync($"{BaseUrl}/rest/v1/Alumni", content);
         response.EnsureSuccessStatusCode();
-    }
-    public async Task<int> NewID()
-    {
-        int idnew = 0;
-        var url = $"{BaseUrl}/rest/v1/Alumni?id";
-        int[] ids;
-        var response = await _httpClient.GetAsync(url);
-        ids = await response.Content.ReadFromJsonAsync<int[]>();
-        idnew = ids.Max();
-        idnew++;
-        return idnew;
     }
     public async void AddConnection(long connectionId, long userId)
     {
