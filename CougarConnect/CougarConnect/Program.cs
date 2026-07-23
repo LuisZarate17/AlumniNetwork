@@ -1,4 +1,4 @@
-using CougarConnect.Components;
+﻿using CougarConnect.Components;
 using CougarConnect.Components.Account;
 using CougarConnect.Data;
 using CougarConnect.Services;
@@ -67,3 +67,5 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
+public partial class Program { }

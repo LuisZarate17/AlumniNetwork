@@ -1,4 +1,4 @@
-using CougarConnect.Data;
+﻿using CougarConnect.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace CougarConnect.Components.Account

@@ -182,9 +182,14 @@ else
         }
 
         currentUserEmail = user.Identity.Name;
+        if (string.IsNullOrEmpty(currentUserEmail))
+        {
+            return;
+        }
+
         try
         {
-            var result = await Supabase.GetData<Alumni>(user.Identity.Name!, "Email");
+            var result = await Supabase.GetData<Alumni>(currentUserEmail, "Email");
             currentUser = result.FirstOrDefault();
         }
         catch (Exception ex)

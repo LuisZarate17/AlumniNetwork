@@ -1,4 +1,4 @@
-namespace CougarConnect.Components.Account;
+﻿namespace CougarConnect.Components.Account;
 
 public class EmailOptions
 {

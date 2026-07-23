@@ -1,4 +1,4 @@
-namespace CougarConnect.Services;
+﻿namespace CougarConnect.Services;
 
 public class SupabaseOptions
 {

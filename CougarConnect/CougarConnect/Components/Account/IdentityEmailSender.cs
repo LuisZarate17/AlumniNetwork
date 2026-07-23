@@ -1,4 +1,4 @@
-using CougarConnect.Components.Account.Pages.Manage;
+﻿using CougarConnect.Components.Account.Pages.Manage;
 using CougarConnect.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;

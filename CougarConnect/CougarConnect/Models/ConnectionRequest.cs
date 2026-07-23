@@ -1,4 +1,4 @@
-namespace CougarConnect.Models;
+﻿namespace CougarConnect.Models;
 
 public class ConnectionRequest
 {

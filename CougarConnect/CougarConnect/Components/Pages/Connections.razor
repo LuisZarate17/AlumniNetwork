@@ -69,14 +69,14 @@ else
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        if (!user.Identity?.IsAuthenticated ?? true)
+        if (user.Identity is not { IsAuthenticated: true, Name: { Length: > 0 } userName })
         {
             return;
         }
 
         try
         {
-            var result = await DBService.GetData<Alumni>(user.Identity!.Name!, "Email");
+            var result = await DBService.GetData<Alumni>(userName, "Email");
             currentUser = result.FirstOrDefault();
 
             if (currentUser?.ConnectionList != null)
