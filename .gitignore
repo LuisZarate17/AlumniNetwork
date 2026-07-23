@@ -3,11 +3,14 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
-# Claude Code local settings
-.claude/
+
 
 # dotenv files
 .env
+
+# Local app secrets (real values live in dotnet user-secrets or a local copy of this file;
+# CougarConnect/CougarConnect/appsettings.Example.json is the checked-in template)
+CougarConnect/CougarConnect/appsettings.json
 
 # User-specific files
 *.rsuser
@@ -485,3 +488,5 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+.claude/

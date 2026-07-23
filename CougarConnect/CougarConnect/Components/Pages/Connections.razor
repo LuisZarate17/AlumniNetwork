@@ -3,15 +3,23 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using CougarConnect.Data
+@using CougarConnect.Models
+@using CougarConnect.Services
 @inject UserManager<ApplicationUser> UserManager
 @inject SupabaseService DBService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<Connections> Logger
 
 <PageTitle>Connections</PageTitle>
 
 <h1>Connections</h1>
 
 <p>This is where you can view your sent connection requests.</p>
+
+@if (errorMessage != null)
+{
+    <p class="text-danger">@errorMessage</p>
+}
 
 @if (allConnections == null)
 {
@@ -28,7 +36,7 @@ else
                     <th>Name</th>
                     <th>Grad Year</th>
                     <th>City</th>
-                    <th>Mojor</th>
+                    <th>Major</th>
                     <th>Company</th>
                 </tr>
             </thead>
@@ -53,39 +61,41 @@ else
 }
 
 @code {
-    private List<Item> allConnections = new List<Item>();
-    Item currentUser;
+    private List<Alumni> allConnections = new List<Alumni>();
+    private Alumni? currentUser;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+        if (!user.Identity?.IsAuthenticated ?? true)
         {
-            var result = await DBService.GetData<Item>(user.Identity.Name, "Email");
+            return;
+        }
+
+        try
+        {
+            var result = await DBService.GetData<Alumni>(user.Identity!.Name!, "Email");
             currentUser = result.FirstOrDefault();
 
-            if (currentUser != null)
+            if (currentUser?.ConnectionList != null)
             {
                 foreach (var connection in currentUser.ConnectionList)
                 {
-                    var connectionResult = await DBService.GetData<Item>(connection.ToString(), "id");
-                    allConnections.Add(connectionResult.FirstOrDefault());
+                    var connectionResult = await DBService.GetData<Alumni>(connection.ToString(), "id");
+                    var match = connectionResult.FirstOrDefault();
+                    if (match != null)
+                    {
+                        allConnections.Add(match);
+                    }
                 }
             }
         }
-    }
-
-    public class Item
-    {
-        public long id { get; set; }
-        public string First { get; set; }
-        public string Last { get; set; }
-        public string GradYear { get; set; }
-        public string City { get; set; }
-        public string Major { get; set; }
-        public string Company { get; set; }
-        public long[] ConnectionList { get; set; }
-        public string Email { get; set; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load connections for {User}", user.Identity?.Name);
+            errorMessage = "Could not load your connections. Please try again later.";
+        }
     }
 }

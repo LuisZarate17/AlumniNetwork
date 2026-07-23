@@ -1,15 +1,18 @@
-﻿@page "/Connection_Search"
+@page "/ConnectionSearch"
 @attribute [StreamRendering]
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
 @using CougarConnect.Data
 @using CougarConnect.Components.Account
+@using CougarConnect.Models
+@using CougarConnect.Services
 @inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IEmailSender EmailSender
+@inject ILogger<ConnectionSearch> Logger
 
 
 <h3>Search Users</h3>
@@ -56,7 +59,7 @@ else
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Would you like to send a connection request to <strong>@selectedUser.First @selectedUser.Last</strong>?</p>
+                    <p>Would you like to send a connection request to <strong>@selectedUser?.First @selectedUser?.Last</strong>?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">No</button>
@@ -118,7 +121,7 @@ else
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Error: Information not submitted. Please fill out all fields.</p>
+                    <p>@errorText</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" @onclick="CloseErrorMessage">Confirm</button>
@@ -152,53 +155,61 @@ else
 }
 
 @code {
+    private const string DefaultValidationErrorText = "Error: Information not submitted. Please fill out all fields.";
+
     private string queryColumn = "First";
     private string[] options = { "First", "Last", "GradYear", "City", "Major", "Company" };
-    private Item[] items;
+    private Alumni[]? items;
     private string searchTerm = string.Empty;
 
     private bool showModal = false;
-    private bool showConnectionForm = false; // Toggle visibility of the connection form
-    private bool showErrorMessage = false; // Toggle visibility of the error message
-    private bool showConfirmationMessage = false; // Toggle visibility of the confirmation message
-    private Item selectedUser; // Store the selected user
+    private bool showConnectionForm = false;
+    private bool showErrorMessage = false;
+    private bool showConfirmationMessage = false;
+    private string errorText = DefaultValidationErrorText;
+    private Alumni? selectedUser;
     private ConnectionRequest connectionRequest = new ConnectionRequest();
-    private string currentUserEmail;
-    private Item currentUser;
-
-    public class Item
-    {
-        public long id { get; set; }
-        public string First { get; set; }
-        public string Last { get; set; }
-        public string GradYear { get; set; }
-        public string City { get; set; }
-        public string Major { get; set; }
-        public string Company { get; set; }
-        public long[] ConnectionList { get; set; }
-        public string Email { get; set; }
-    }
+    private string? currentUserEmail;
+    private Alumni? currentUser;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity?.IsAuthenticated != true)
         {
-            currentUserEmail = user.Identity.Name;
-            await Supabase.GetData<Item>(user.Identity.Name, "Email").ContinueWith(task =>
-            {
-                currentUser = task.Result.FirstOrDefault();
-            });
+            return;
+        }
+
+        currentUserEmail = user.Identity.Name;
+        try
+        {
+            var result = await Supabase.GetData<Alumni>(user.Identity.Name!, "Email");
+            currentUser = result.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load current user profile for {Email}", currentUserEmail);
+            errorText = "Could not load your profile. Please try again later.";
+            showErrorMessage = true;
         }
     }
 
     protected async Task SearchUsers()
     {
-        items = await Supabase.GetData<Item>(searchTerm, queryColumn);
+        try
+        {
+            items = await Supabase.GetData<Alumni>(searchTerm, queryColumn);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Search failed for term {SearchTerm} on column {Column}", searchTerm, queryColumn);
+            errorText = "Search failed. Please try again later.";
+            showErrorMessage = true;
+        }
     }
 
-    private void OnResultClick(Item result)
+    private void OnResultClick(Alumni result)
     {
         selectedUser = result;
         showModal = true;
@@ -213,9 +224,9 @@ else
 
     private void OpenConnectionForm()
     {
-        showModal = false; // Close the modal
-        showConnectionForm = true; // Show the connection request form
-        StateHasChanged(); // Ensure the UI updates
+        showModal = false;
+        showConnectionForm = true;
+        StateHasChanged();
     }
 
     private void CloseConnectionForm()
@@ -238,33 +249,41 @@ else
 
     private async Task HandleConnectionRequestSubmit()
     {
-        // Check if any fields are empty
         if (string.IsNullOrWhiteSpace(connectionRequest.RequestSubject) || string.IsNullOrWhiteSpace(connectionRequest.Message))
         {
-            // Show error message if any fields are empty
+            errorText = DefaultValidationErrorText;
             showErrorMessage = true;
+            StateHasChanged();
+            return;
         }
-        else
+
+        if (selectedUser == null || currentUser == null)
         {
-            // After submission, hide the form and show a success message
-            showConnectionForm = false;
-            showConfirmationMessage = true; // Show confirmation message
+            errorText = "Could not determine your profile or the selected alumni. Please try again.";
+            showErrorMessage = true;
+            StateHasChanged();
+            return;
+        }
 
-            string message = connectionRequest.Message;
-
+        try
+        {
+            var message = connectionRequest.Message;
             var body = $"{message}\n\nThe following request was sent on behalf of a WSU student ({currentUser.First} {currentUser.Last}) seeking a connection\nIf you would like to reply to the request their email address is: {currentUser.Email}\n\nTo be removed from this site and no longer recieve requests follow the link below";
             await EmailSender.SendEmailAsync(selectedUser.Email, $"Cougar Connect Request: {connectionRequest.RequestSubject}", body);
 
-            Supabase.AddConnection(selectedUser.id, currentUser.id);
+            await Supabase.AddConnection(selectedUser.Id, currentUser.Id);
 
-            connectionRequest = new ConnectionRequest(); // Reset the form
+            showConnectionForm = false;
+            showConfirmationMessage = true;
+            connectionRequest = new ConnectionRequest();
         }
-        StateHasChanged();
-    }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send connection request from {CurrentUserId} to {SelectedUserId}", currentUser.Id, selectedUser.Id);
+            errorText = "Could not send the connection request. Please try again later.";
+            showErrorMessage = true;
+        }
 
-    public class ConnectionRequest
-    {
-        public string RequestSubject { get; set; }
-        public string Message { get; set; }
+        StateHasChanged();
     }
 }

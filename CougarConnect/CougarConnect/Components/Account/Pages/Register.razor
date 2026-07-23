@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using CougarConnect.Data
+@using CougarConnect.Models
+@using CougarConnect.Services
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -76,21 +78,6 @@
 @code {
     private IEnumerable<IdentityError>? identityErrors;
 
-    public class Item(long newid, string newFirst, string newLast, 
-        string newGradYear, string newCity, string newMajor, string newCompany,
-        long[] newConnections, string newEmail)
-    {
-        public long id { get; set; } = newid;
-        public string First { get; set; } = newFirst;
-        public string Last { get; set; } = newLast;
-        public string GradYear { get; set; } = newGradYear;
-        public string City { get; set; } = newCity;
-        public string Major { get; set; } = newMajor;
-        public string? Company { get; set; } = newCompany;
-        public long[]? ConnectionList { get; set; } = newConnections;
-        public string Email { get; set; } = newEmail;
-    }
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -114,14 +101,25 @@
             return;
         }
 
+        // TODO(Phase 3): Random ID generation is not collision-checked against existing
+        // Supabase rows; replace with a DB-generated key or an existence check before production use.
         var random = new Random();
         var newUserID = random.Next(10000, 100000);
 
-        Item newUserDBEntry = new Item(newUserID, Input.FirstName, Input.LastName,
-            Input.GradYear, Input.City, Input.Major, "student", Array.Empty<long>(), Input.Email);
+        var newUserDBEntry = new Alumni
+        {
+            Id = newUserID,
+            First = Input.FirstName,
+            Last = Input.LastName,
+            GradYear = Input.GradYear,
+            City = Input.City,
+            Major = Input.Major,
+            Company = "student",
+            ConnectionList = Array.Empty<long>(),
+            Email = Input.Email
+        };
 
-        // Log new user to supabase DB
-        await DBService.PostData<Item>("Alumni", newUserDBEntry);
+        await DBService.PostData("Alumni", newUserDBEntry);
 
         Logger.LogInformation("User created a new account with password.");
 
