@@ -1,0 +1,88 @@
+@if (Show)
+{
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="@_titleId"
+         @onclick="HandleBackdropClick" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog" @onclick:stopPropagation="true">
+            <div class="modal-content" @ref="_dialogRef" tabindex="-1">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="@_titleId">@Title</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="RequestCloseAsync"></button>
+                </div>
+                <div class="modal-body">
+                    @ChildContent
+                </div>
+                @if (FooterContent is not null)
+                {
+                    <div class="modal-footer">
+                        @FooterContent
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop show"></div>
+}
+
+@code {
+    private readonly string _titleId = $"modal-title-{Guid.NewGuid():N}";
+    private ElementReference _dialogRef;
+    private bool _shouldFocus;
+    private bool _wasShown;
+
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ShowChanged { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    [Parameter]
+    public bool CloseOnBackdropClick { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Show && !_wasShown)
+        {
+            _shouldFocus = true;
+        }
+
+        _wasShown = Show;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocus)
+        {
+            _shouldFocus = false;
+            await _dialogRef.FocusAsync();
+        }
+    }
+
+    private async Task RequestCloseAsync()
+    {
+        Show = false;
+        await ShowChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync();
+    }
+
+    private Task HandleBackdropClick()
+    {
+        return CloseOnBackdropClick ? RequestCloseAsync() : Task.CompletedTask;
+    }
+
+    private Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        return e.Key == "Escape" ? RequestCloseAsync() : Task.CompletedTask;
+    }
+}

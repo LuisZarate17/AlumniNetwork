@@ -20,63 +20,77 @@
 
 <PageTitle>Register</PageTitle>
 
-<h1>Register</h1>
-
-<div class="row">
-    <div class="col-md-4">
+<AuthCard Title="Create your account" Wide="true">
+    <ChildContent>
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="email">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label for="password">Password</label>
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label for="confirm-password">Confirm Password</label>
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
-            <div class="form-floating mb-3">
-                <InputText type="first" @bind-Value="Input.FirstName" class="form-control" autocomplete="first-name" aria-required="true" placeholder="John" />
-                <label for="first-name">First Name</label>
-                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-floating mb-3">
+                        <InputText id="first-name" type="text" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="John" />
+                        <label for="first-name">First Name</label>
+                        <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-floating mb-3">
+                        <InputText id="last-name" type="text" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="Doe" />
+                        <label for="last-name">Last Name</label>
+                        <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-floating mb-3">
+                        <InputText id="city" type="text" @bind-Value="Input.City" class="form-control" autocomplete="city" aria-required="true" placeholder="Pullman" />
+                        <label for="city">City</label>
+                        <ValidationMessage For="() => Input.City" class="text-danger" />
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-floating mb-3">
+                        <InputText id="major" type="text" @bind-Value="Input.Major" class="form-control" autocomplete="major" aria-required="true" placeholder="Computer Science" />
+                        <label for="major">Major</label>
+                        <ValidationMessage For="() => Input.Major" class="text-danger" />
+                    </div>
+                </div>
             </div>
             <div class="form-floating mb-3">
-                <InputText type="last" @bind-Value="Input.LastName" class="form-control" autocomplete="last-name" aria-required="true" placeholder="Doe" />
-                <label for="last-name">Last Name</label>
-                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                <InputText id="grad-year" type="text" @bind-Value="Input.GradYear" class="form-control" autocomplete="grad-year" aria-required="true" placeholder="2023" />
+                <label for="grad-year">Graduation Year</label>
+                <ValidationMessage For="() => Input.GradYear" class="text-danger" />
             </div>
-            <div class="form-floating mb-3">
-				<InputText type="city" @bind-Value="Input.City" class="form-control" autocomplete="city" aria-required="true" placeholder="Provo" />
-				<label for="city">City</label>
-				<ValidationMessage For="() => Input.City" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="major" @bind-Value="Input.Major" class="form-control" autocomplete="major" aria-required="true" placeholder="Computer Science" />
-                <label for="major">Major</label>
-                <ValidationMessage For="() => Input.Major" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="grad-year" @bind-Value="Input.GradYear" class="form-control" autocomplete="grad-year" aria-required="true" placeholder="2023" />
-				<label for="grad-year">Graduation Year</label>
-				<ValidationMessage For="() => Input.GradYear" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button type="submit" class="w-100 btn btn-primary py-2">Create account</button>
         </EditForm>
-    </div>
-</div>
+    </ChildContent>
+    <FooterContent>
+        <p>Already have an account? <a href="Account/Login"><strong>Log in</strong></a></p>
+    </FooterContent>
+</AuthCard>
 
 @code {
     private IEnumerable<IdentityError>? identityErrors;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
@@ -119,7 +133,16 @@
             Email = Input.Email
         };
 
-        await DBService.PostData("Alumni", newUserDBEntry);
+        var profileCreated = true;
+        try
+        {
+            await DBService.PostData("Alumni", newUserDBEntry);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create Supabase Alumni profile for new user {Email}", Input.Email);
+            profileCreated = false;
+        }
 
         Logger.LogInformation("User created a new account with password.");
 
@@ -130,10 +153,28 @@
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
+        try
+        {
+            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send confirmation email to new user {Email}", Input.Email);
+        }
 
         if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
+            if (!profileCreated)
+            {
+                var confirmationUrl = NavigationManager.GetUriWithQueryParameters(
+                    NavigationManager.ToAbsoluteUri("Account/RegisterConfirmation").AbsoluteUri,
+                    new Dictionary<string, object?> { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+                RedirectManager.RedirectToWithStatus(
+                    confirmationUrl,
+                    "Error: Your account was created, but we couldn't finish setting up your alumni profile, so you may not appear in Search Alumni yet. Please contact support.",
+                    HttpContext);
+            }
+
             RedirectManager.RedirectTo(
                 "Account/RegisterConfirmation",
                 new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });

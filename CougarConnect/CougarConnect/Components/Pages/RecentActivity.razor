@@ -1,0 +1,245 @@
+@page "/RecentActivity"
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using CougarConnect.Models
+@using CougarConnect.Services
+@inject SupabaseService DBService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<RecentActivity> Logger
+
+<PageTitle>Recent Activity</PageTitle>
+
+<h1 class="cc-page-title">Recent Activity</h1>
+<p class="cc-page-subtitle">Connection requests, messages, and responses to your requests.</p>
+
+@if (errorMessage is not null)
+{
+    <StatusMessage Message="@errorMessage" IsError="true" />
+}
+@if (successMessage is not null)
+{
+    <StatusMessage Message="@successMessage" IsError="false" />
+}
+
+@if (isLoading)
+{
+    <LoadingSpinner Text="Loading your recent activity…" />
+}
+else if (errorMessage is null)
+{
+    @if (pendingRequests.Any())
+    {
+        <h2 class="cc-section-title">Connection Requests</h2>
+        <div class="card mb-4">
+            <ul class="list-unstyled cc-activity-feed mb-0">
+                @foreach (var pending in pendingRequests)
+                {
+                    <li class="cc-activity-item">
+                        <div class="cc-activity-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
+                        <div class="cc-activity-text">
+                            <div><strong>@RequesterName(pending)</strong> wants to connect with you.</div>
+                            @if (!string.IsNullOrWhiteSpace(pending.Request.Message))
+                            {
+                                <div class="text-muted small">@pending.Request.Message</div>
+                            }
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm" disabled="@isResponding"
+                                    @onclick="() => RespondAsync(pending, accept: true)">
+                                <i class="bi bi-check-lg" aria-hidden="true"></i> Accept
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@isResponding"
+                                    @onclick="() => RespondAsync(pending, accept: false)">
+                                Decline
+                            </button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (notifications.Count > 0)
+    {
+        <h2 class="cc-section-title">Activity</h2>
+        <div class="card">
+            <ul class="list-unstyled cc-activity-feed mb-0">
+                @foreach (var notification in notifications)
+                {
+                    <li class="cc-activity-item">
+                        <div class="cc-activity-icon" aria-hidden="true"><i class="bi @IconFor(notification.Message)"></i></div>
+                        <span class="cc-activity-text">@notification.Message</span>
+                        <span class="cc-activity-time small" title="@($"{notification.CreatedAt:g} UTC")">@RelativeTime(notification.CreatedAt)</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+    else if (!pendingRequests.Any())
+    {
+        <div class="cc-empty-state">
+            <i class="bi bi-bell-slash" aria-hidden="true"></i>
+            <h2>No recent activity</h2>
+            <p>When someone sends you a request, responds to yours, or messages you, it will show up here.</p>
+        </div>
+    }
+}
+
+@code {
+    private List<Notification> notifications = new();
+    private List<PendingRequest> pendingRequests = new();
+    private Alumni? currentUser;
+    private bool isLoading = true;
+    private bool isResponding;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity is not { IsAuthenticated: true, Name: { Length: > 0 } userName })
+        {
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var result = await DBService.GetData<Alumni>(userName, "Email");
+            currentUser = result.FirstOrDefault();
+            if (currentUser is not null)
+            {
+                notifications = await DBService.GetNotifications(currentUser.Id);
+                await LoadPendingRequestsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load recent activity for {User}", user.Identity?.Name);
+            errorMessage = "Could not load your recent activity. Please try again later.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadPendingRequestsAsync()
+    {
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        pendingRequests = new List<PendingRequest>();
+        var incoming = await DBService.GetIncomingPendingRequests(currentUser.Id);
+        foreach (var request in incoming)
+        {
+            var requesterResult = await DBService.GetData<Alumni>(request.RequesterId.ToString(), "id");
+            var requester = requesterResult.FirstOrDefault(a => a.Id == request.RequesterId);
+            pendingRequests.Add(new PendingRequest(request, requester));
+        }
+    }
+
+    private async Task RespondAsync(PendingRequest pending, bool accept)
+    {
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        isResponding = true;
+        successMessage = null;
+        errorMessage = null;
+        try
+        {
+            if (accept)
+            {
+                await DBService.AddMutualConnection(pending.Request.RequesterId, pending.Request.RecipientId);
+            }
+
+            pending.Request.Status = accept ? "Accepted" : "Declined";
+            await DBService.PostData("ConnectionRequests", pending.Request);
+
+            try
+            {
+                var verb = accept ? "accepted" : "declined";
+                await DBService.AddNotification(pending.Request.RequesterId,
+                    $"{currentUser.First} {currentUser.Last} {verb} your connection request.");
+            }
+            catch (Exception ex)
+            {
+                // The response itself already succeeded - a failed notification shouldn't undo it.
+                Logger.LogError(ex, "Failed to notify requester {RequesterId} of the response", pending.Request.RequesterId);
+            }
+
+            pendingRequests.Remove(pending);
+            successMessage = accept
+                ? $"You're now connected with {RequesterName(pending)}."
+                : "Connection request declined.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to respond to connection request {RequestId}", pending.Request.Id);
+            errorMessage = "Could not record your response. Please try again later.";
+        }
+        finally
+        {
+            isResponding = false;
+        }
+    }
+
+    private static string RequesterName(PendingRequest pending) =>
+        pending.Requester is null ? "Someone" : $"{pending.Requester.First} {pending.Requester.Last}";
+
+    private static string IconFor(string message)
+    {
+        if (message.Contains("sent you a message", StringComparison.OrdinalIgnoreCase))
+        {
+            return "bi-chat-dots";
+        }
+
+        if (message.Contains("accepted", StringComparison.OrdinalIgnoreCase))
+        {
+            return "bi-person-check";
+        }
+
+        if (message.Contains("declined", StringComparison.OrdinalIgnoreCase))
+        {
+            return "bi-person-x";
+        }
+
+        return "bi-bell";
+    }
+
+    private static string RelativeTime(DateTimeOffset timestamp)
+    {
+        var elapsed = DateTimeOffset.UtcNow - timestamp;
+
+        if (elapsed < TimeSpan.FromMinutes(1))
+        {
+            return "just now";
+        }
+
+        if (elapsed < TimeSpan.FromHours(1))
+        {
+            return $"{(int)elapsed.TotalMinutes}m ago";
+        }
+
+        if (elapsed < TimeSpan.FromDays(1))
+        {
+            return $"{(int)elapsed.TotalHours}h ago";
+        }
+
+        if (elapsed < TimeSpan.FromDays(7))
+        {
+            return $"{(int)elapsed.TotalDays}d ago";
+        }
+
+        return timestamp.ToString("d MMM yyyy");
+    }
+
+    private sealed record PendingRequest(ConnectionRequest Request, Alumni? Requester);
+}

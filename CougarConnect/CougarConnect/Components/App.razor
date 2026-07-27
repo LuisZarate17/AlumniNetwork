@@ -1,12 +1,45 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="@Theme">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
-    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
+    <script>
+        // Runs synchronously before first paint. The server already renders data-bs-theme from
+        // the cc-theme cookie; this only needs to resolve the very first visit (no cookie yet)
+        // from the OS preference and persist it so later server renders match.
+        (function () {
+            function getCookie(name) {
+                var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+                return m ? m[1] : null;
+            }
+
+            var t = getCookie('cc-theme');
+            if (t !== 'dark' && t !== 'light') {
+                t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.cookie = 'cc-theme=' + t + ';path=/;max-age=31536000;samesite=lax';
+            }
+            document.documentElement.setAttribute('data-bs-theme', t);
+
+            window.ccSetTheme = function (theme) {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                document.cookie = 'cc-theme=' + theme + ';path=/;max-age=31536000;samesite=lax';
+                window.ccSyncThemeControls();
+            };
+            // Keeps any theme switch on the page (e.g. Account settings) in sync with the active theme.
+            window.ccSyncThemeControls = function () {
+                var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                document.querySelectorAll('[data-cc-theme-switch]').forEach(function (el) {
+                    el.checked = isDark;
+                });
+            };
+            document.addEventListener('DOMContentLoaded', window.ccSyncThemeControls);
+        })();
+    </script>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css?v=5.3" />
+    <link rel="stylesheet" href="bootstrap-icons/bootstrap-icons.min.css?v=1" />
+    <link rel="stylesheet" href="app.css?v=2" />
     <link rel="stylesheet" href="CougarConnect.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
@@ -15,6 +48,21 @@
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        // After enhanced (SPA-style) navigation, re-sync any theme switch on the new page.
+        // The theme attribute itself is rendered server-side from the cookie, so it persists.
+        Blazor.addEventListener('enhancedload', function () { window.ccSyncThemeControls(); });
+    </script>
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    // Render the active theme onto <html> for every response (including enhanced-navigation
+    // responses) so the theme survives navigation instead of being stripped by DOM morphing.
+    private string Theme =>
+        HttpContext?.Request.Cookies["cc-theme"] == "dark" ? "dark" : "light";
+}

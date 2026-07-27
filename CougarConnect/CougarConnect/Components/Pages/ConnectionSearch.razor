@@ -7,170 +7,109 @@
 @using CougarConnect.Components.Account
 @using CougarConnect.Models
 @using CougarConnect.Services
-@inject NavigationManager NavigationManager
 @inject SupabaseService Supabase
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IEmailSender EmailSender
 @inject ILogger<ConnectionSearch> Logger
 
+<PageTitle>Search Alumni</PageTitle>
 
-<h3>Search Users</h3>
+<h1 class="cc-page-title">Search Alumni</h1>
+<p class="cc-page-subtitle">Find fellow Cougars and grow your network.</p>
 
-<!-- Search Form -->
-<select @bind="queryColumn">
-    @foreach (var option in options)
-    {
-        <option value="@option">@option</option>
-    }
-</select>
-<input @bind="searchTerm" placeholder="Enter search term" />
-<button @onclick="SearchUsers">Search</button>
-
-<!-- Search Results -->
-@if (items != null && items.Any())
+@if (errorMessage is not null)
 {
-    <ul>
+    <StatusMessage Message="@errorMessage" IsError="true" />
+}
+@if (successMessage is not null)
+{
+    <StatusMessage Message="@successMessage" IsError="false" />
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text" id="searchIcon"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <input id="searchTerm" class="form-control" value="@searchTerm" @oninput="OnSearchInput"
+                   placeholder="Start typing to search…" autocomplete="off"
+                   aria-label="Search alumni" aria-describedby="searchIcon" />
+            <select id="searchColumn" class="form-select cc-search-column" @bind="queryColumn" @bind:after="SearchUsers"
+                    aria-label="Search by column">
+                @foreach (var option in options)
+                {
+                    <option value="@option">@option</option>
+                }
+            </select>
+        </div>
+        @if (isSearching)
+        {
+            <div class="mt-2 small text-muted">
+                <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+                <span> Searching…</span>
+            </div>
+        }
+    </div>
+</div>
+
+@if (items is not null && items.Any())
+{
+    <p class="text-muted small mb-3">@items.Length @(items.Length == 1 ? "alumnus" : "alumni") found</p>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
         @foreach (var result in items)
         {
-            <li>
-                <button class="btn btn-link" @onclick="() => OnResultClick(result)">
-                    @result.First - @result.Last - @result.Major - @result.GradYear - @result.Company - @result.City
-                </button>
-            </li>
+            <div class="col">
+                <AlumniCard Alumni="result">
+                    <ActionContent>
+                        <ConnectButton Recipient="result" CurrentUser="currentUser"
+                                       Status="@GetStatus(result.Id)"
+                                       OnRequestSent="OnRequestSent" />
+                    </ActionContent>
+                </AlumniCard>
+            </div>
         }
-    </ul>
+    </div>
+}
+else if (hasSearched)
+{
+    <div class="cc-empty-state">
+        <i class="bi bi-person-x" aria-hidden="true"></i>
+        <h2>No results found</h2>
+        <p>Try a different search term, or switch the "Search by" field.</p>
+    </div>
 }
 else
 {
-    <p>No results found.</p>
-}
-
-<!-- Modal for Connection Request -->
-@if (showModal)
-{
-    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Connection Request</h5>
-                    <button type="button" class="close" @onclick="CloseModal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Would you like to send a connection request to <strong>@selectedUser?.First @selectedUser?.Last</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">No</button>
-                    <button type="button" class="btn btn-primary" @onclick="OpenConnectionForm">Yes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Modal for Connection Request Form -->
-@if (showConnectionForm)
-{
-    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Send Connection Request Form</h5>
-                    <button type="button" class="close" @onclick="CloseConnectionForm" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <EditForm Model="@connectionRequest" OnValidSubmit="HandleConnectionRequestSubmit">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-
-                        <div class="mb-3">
-                            <label for="RequestSubject" class="form-label">Request Subject</label>
-                            <InputText id="requestSubject" class="form-control" @bind-Value="connectionRequest.RequestSubject" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="message" class="form-label">Message</label>
-                            <InputTextArea id="message" class="form-control" @bind-Value="connectionRequest.Message" />
-                        </div>
-
-                        <div class="mb-3">
-                            <p>"You may only send one request per Alumni, make it count!"</p>
-                            <button type="submit" class="btn btn-primary">Send Request</button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Error Message Modal -->
-@if (showErrorMessage)
-{
-    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Error</h5>
-                    <button type="button" class="close" @onclick="CloseErrorMessage" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>@errorText</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @onclick="CloseErrorMessage">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Confirmation Message Modal -->
-@if (showConfirmationMessage)
-{
-    <div class="modal" tabindex="-1" style="display: block;" aria-hidden="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Success</h5>
-                    <button type="button" class="close" @onclick="CloseConfirmationMessage" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Connection request sent successfully!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @onclick="CloseConfirmationMessage">Confirm</button>
-                </div>
-            </div>
-        </div>
+    <div class="cc-empty-state">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <h2>Search the alumni directory</h2>
+        <p>Search WSU alumni by name, email, major, city, or company.</p>
     </div>
 }
 
 @code {
-    private const string DefaultValidationErrorText = "Error: Information not submitted. Please fill out all fields.";
-
-    private string queryColumn = "First";
-    private string[] options = { "First", "Last", "GradYear", "City", "Major", "Company" };
+    private string queryColumn = "All";
+    private string[] options = { "All", "First", "Last", "Email", "GradYear", "City", "Major", "Company" };
     private Alumni[]? items;
     private string searchTerm = string.Empty;
+    private bool hasSearched;
+    private bool isSearching;
 
-    private bool showModal = false;
-    private bool showConnectionForm = false;
-    private bool showErrorMessage = false;
-    private bool showConfirmationMessage = false;
-    private string errorText = DefaultValidationErrorText;
-    private Alumni? selectedUser;
-    private ConnectionRequest connectionRequest = new ConnectionRequest();
+    private string? errorMessage;
+    private string? successMessage;
     private string? currentUserEmail;
     private Alumni? currentUser;
+    private Dictionary<long, string> connectionStatuses = new();
+    private CancellationTokenSource? searchDebounceCts;
+
+    private string? GetStatus(long id) =>
+        connectionStatuses.TryGetValue(id, out var status) ? status : null;
+
+    private void OnRequestSent(long recipientId)
+    {
+        connectionStatuses[recipientId] = "Pending";
+        successMessage = "Connection request sent successfully!";
+        errorMessage = null;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,100 +134,150 @@ else
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to load current user profile for {Email}", currentUserEmail);
-            errorText = "Could not load your profile. Please try again later.";
-            showErrorMessage = true;
+            errorMessage = "Could not load your profile. Please try again later.";
+        }
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+
+        // Debounce: cancel the previous pending search so we only query once the
+        // user pauses typing, rather than firing a request on every keystroke.
+        searchDebounceCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        searchDebounceCts = cts;
+
+        try
+        {
+            await Task.Delay(300, cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!cts.IsCancellationRequested)
+        {
+            await SearchUsers();
         }
     }
 
     protected async Task SearchUsers()
     {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            items = null;
+            hasSearched = false;
+            errorMessage = null;
+            return;
+        }
+
+        isSearching = true;
+        errorMessage = null;
         try
         {
-            items = await Supabase.GetData<Alumni>(searchTerm, queryColumn);
+            var results = queryColumn == "All"
+                ? await Supabase.SearchAlumni(searchTerm)
+                : await Supabase.GetData<Alumni>(searchTerm, queryColumn);
+            items = RankBySearchRelevance(results, searchTerm);
+            await LoadConnectionStatuses();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Search failed for term {SearchTerm} on column {Column}", searchTerm, queryColumn);
-            errorText = "Search failed. Please try again later.";
-            showErrorMessage = true;
+            errorMessage = "Search failed. Please try again later.";
+        }
+        finally
+        {
+            hasSearched = true;
+            isSearching = false;
         }
     }
 
-    private void OnResultClick(Alumni result)
+    private async Task LoadConnectionStatuses()
     {
-        selectedUser = result;
-        showModal = true;
-        StateHasChanged();
-    }
-
-    private void CloseModal()
-    {
-        showModal = false;
-        StateHasChanged();
-    }
-
-    private void OpenConnectionForm()
-    {
-        showModal = false;
-        showConnectionForm = true;
-        StateHasChanged();
-    }
-
-    private void CloseConnectionForm()
-    {
-        showConnectionForm = false;
-        StateHasChanged();
-    }
-
-    private void CloseErrorMessage()
-    {
-        showErrorMessage = false;
-        StateHasChanged();
-    }
-
-    private void CloseConfirmationMessage()
-    {
-        showConfirmationMessage = false;
-        StateHasChanged();
-    }
-
-    private async Task HandleConnectionRequestSubmit()
-    {
-        if (string.IsNullOrWhiteSpace(connectionRequest.RequestSubject) || string.IsNullOrWhiteSpace(connectionRequest.Message))
+        connectionStatuses.Clear();
+        if (currentUser is null || items is null)
         {
-            errorText = DefaultValidationErrorText;
-            showErrorMessage = true;
-            StateHasChanged();
             return;
         }
 
-        if (selectedUser == null || currentUser == null)
+        foreach (var result in items)
         {
-            errorText = "Could not determine your profile or the selected alumni. Please try again.";
-            showErrorMessage = true;
-            StateHasChanged();
-            return;
+            if (result.Id == currentUser.Id)
+            {
+                connectionStatuses[result.Id] = "Yourself";
+                continue;
+            }
+
+            if (currentUser.ConnectionList is not null && currentUser.ConnectionList.Contains(result.Id))
+            {
+                connectionStatuses[result.Id] = "Connected";
+                continue;
+            }
+
+            try
+            {
+                if (await Supabase.ConnectionRequestExists(currentUser.Id, result.Id))
+                {
+                    connectionStatuses[result.Id] = "Pending";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to check connection status for {SelectedUserId}", result.Id);
+                // Fail open: leave this result as a plain "Connect" button if the check errors.
+            }
+        }
+    }
+
+    // Orders results so the most relevant matches (name matches) appear first, rather
+    // than in whatever order the backend returns them (e.g. searching "luis" surfaces
+    // "Luis Zarate" above alumni that only match via their email address).
+    private static Alumni[] RankBySearchRelevance(Alumni[] results, string term)
+    {
+        var normalized = term.Trim().ToLowerInvariant();
+        return results
+            .OrderByDescending(a => RelevanceScore(a, normalized))
+            .ThenBy(a => $"{a.First} {a.Last}", StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static int RelevanceScore(Alumni a, string term)
+    {
+        var first = (a.First ?? string.Empty).ToLowerInvariant();
+        var last = (a.Last ?? string.Empty).ToLowerInvariant();
+        var full = $"{first} {last}".Trim();
+
+        if (first == term || last == term || full == term)
+        {
+            return 5;
         }
 
-        try
+        if (first.StartsWith(term) || last.StartsWith(term))
         {
-            var message = connectionRequest.Message;
-            var body = $"{message}\n\nThe following request was sent on behalf of a WSU student ({currentUser.First} {currentUser.Last}) seeking a connection\nIf you would like to reply to the request their email address is: {currentUser.Email}\n\nTo be removed from this site and no longer recieve requests follow the link below";
-            await EmailSender.SendEmailAsync(selectedUser.Email, $"Cougar Connect Request: {connectionRequest.RequestSubject}", body);
-
-            await Supabase.AddConnection(selectedUser.Id, currentUser.Id);
-
-            showConnectionForm = false;
-            showConfirmationMessage = true;
-            connectionRequest = new ConnectionRequest();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to send connection request from {CurrentUserId} to {SelectedUserId}", currentUser.Id, selectedUser.Id);
-            errorText = "Could not send the connection request. Please try again later.";
-            showErrorMessage = true;
+            return 4;
         }
 
-        StateHasChanged();
+        if (first.Contains(term) || last.Contains(term))
+        {
+            return 3;
+        }
+
+        if ((a.Major ?? string.Empty).ToLowerInvariant().Contains(term)
+            || (a.City ?? string.Empty).ToLowerInvariant().Contains(term)
+            || (a.Company ?? string.Empty).ToLowerInvariant().Contains(term)
+            || (a.GradYear ?? string.Empty).ToLowerInvariant().Contains(term))
+        {
+            return 2;
+        }
+
+        if ((a.Email ?? string.Empty).ToLowerInvariant().Contains(term))
+        {
+            return 1;
+        }
+
+        return 0;
     }
 }

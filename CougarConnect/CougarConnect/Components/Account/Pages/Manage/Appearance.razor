@@ -1,0 +1,68 @@
+@page "/Account/Manage/Appearance"
+@using CougarConnect.Data
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Appearance</PageTitle>
+
+<h2 class="cc-section-title">Appearance</h2>
+
+<p class="text-muted">Choose how CougarConnect looks. This preference is saved to your account, so different people using this device can each pick their own.</p>
+
+<form @onsubmit="SaveThemeAsync" @formname="set-theme" method="post">
+    <AntiforgeryToken />
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch"
+               name="Input.Dark" value="true" checked="@(Input?.Dark ?? false)"
+               data-cc-theme-switch
+               onchange="ccSetTheme(this.checked ? 'dark' : 'light'); this.form.requestSubmit();" />
+        <label class="form-check-label" for="themeSwitch">
+            <i class="bi bi-moon-stars me-1" aria-hidden="true"></i> Dark mode
+        </label>
+    </div>
+</form>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private ThemeInput Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!HttpMethods.IsPost(HttpContext.Request.Method))
+        {
+            Input ??= new ThemeInput();
+            var user = await UserManager.GetUserAsync(HttpContext.User);
+            Input.Dark = user?.Theme is null
+                ? HttpContext.Request.Cookies["cc-theme"] == "dark"
+                : user.Theme == "dark";
+        }
+    }
+
+    private async Task SaveThemeAsync()
+    {
+        // An unchecked switch posts no "Input.Dark" field, so Input binds to null - treat that as light.
+        var theme = (Input?.Dark ?? false) ? "dark" : "light";
+
+        var user = await UserManager.GetUserAsync(HttpContext.User);
+        if (user is not null)
+        {
+            user.Theme = theme;
+            await UserManager.UpdateAsync(user);
+        }
+
+        // Keep the render cookie in sync so the choice applies immediately after the redirect.
+        HttpContext.Response.Cookies.Append("cc-theme", theme,
+            new CookieOptions { Path = "/", MaxAge = TimeSpan.FromDays(365), SameSite = SameSiteMode.Lax });
+
+        RedirectManager.RedirectTo("Account/Manage/Appearance");
+    }
+
+    private sealed class ThemeInput
+    {
+        public bool Dark { get; set; }
+    }
+}

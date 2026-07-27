@@ -14,24 +14,25 @@
 
 <PageTitle>Resend email confirmation</PageTitle>
 
-<h1>Resend email confirmation</h1>
-<h2>Enter your email.</h2>
-<hr />
-<StatusMessage Message="@message" />
-<div class="row">
-    <div class="col-md-4">
+<AuthCard Title="Resend email confirmation">
+    <ChildContent>
+        <p class="text-muted">Enter your email and we'll send the confirmation link again.</p>
+        <StatusMessage Message="@message" />
         <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
+                <InputText id="email" @bind-Value="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
                 <label for="email" class="form-label">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend</button>
+            <button type="submit" class="w-100 btn btn-primary py-2">Resend</button>
         </EditForm>
-    </div>
-</div>
+    </ChildContent>
+    <FooterContent>
+        <p><a href="Account/Login">Back to login</a></p>
+    </FooterContent>
+</AuthCard>
 
 @code {
     private string? message;
@@ -49,12 +50,17 @@
         }
 
         var userId = await UserManager.GetUserIdAsync(user);
+        // Rotate the security stamp first so any previously-emailed confirmation link stops
+        // working - only the newest email should be able to confirm the account.
+        await UserManager.UpdateSecurityStampAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+        // The email is plain text, so pass the raw URL - HTML-encoding it turns "&" into
+        // "&amp;" and breaks the "code" query parameter.
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
 
         message = "Verification email sent. Please check your email.";
     }

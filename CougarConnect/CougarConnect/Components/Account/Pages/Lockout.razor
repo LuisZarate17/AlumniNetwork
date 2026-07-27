@@ -2,7 +2,11 @@
 
 <PageTitle>Locked out</PageTitle>
 
-<header>
-    <h1 class="text-danger">Locked out</h1>
-    <p class="text-danger">This account has been locked out, please try again later.</p>
-</header>
+<AuthCard Title="Locked out">
+    <ChildContent>
+        <p class="text-muted"><i class="bi bi-lock me-1" aria-hidden="true"></i> This account has been locked out. Please try again later.</p>
+    </ChildContent>
+    <FooterContent>
+        <p><a href="Account/Login">Back to login</a></p>
+    </FooterContent>
+</AuthCard>

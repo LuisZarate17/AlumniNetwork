@@ -1,5 +1,6 @@
 @page "/Connections"
 @attribute [StreamRendering]
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using CougarConnect.Data
@@ -12,58 +13,142 @@
 
 <PageTitle>Connections</PageTitle>
 
-<h1>Connections</h1>
+<h1 class="cc-page-title">Connections</h1>
+<p class="cc-page-subtitle">People you're connected with — open a conversation anytime.</p>
 
-<p>This is where you can view your sent connection requests.</p>
-
-@if (errorMessage != null)
+@if (errorMessage is not null)
 {
-    <p class="text-danger">@errorMessage</p>
+    <StatusMessage Message="@errorMessage" IsError="true" />
 }
 
-@if (allConnections == null)
+@if (isLoading)
 {
-    <p><em>Loading...</em></p>
+    <LoadingSpinner Text="Loading your connections…" />
 }
-else
+else if (errorMessage is null)
 {
-    <h2>Connections</h2>
     @if (allConnections.Any())
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Grad Year</th>
-                    <th>City</th>
-                    <th>Major</th>
-                    <th>Company</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var connection in allConnections)
-                {
-                    <tr>
-                        <td>@connection.First @connection.Last</td>
-                        <td>@connection.GradYear</td>
-                        <td>@connection.City</td>
-                        <td>@connection.Major</td>
-                        <td>@connection.Company</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            @foreach (var connection in allConnections)
+            {
+                <div class="col">
+                    <AlumniCard Alumni="connection">
+                        <ActionContent>
+                            @if (unreadCounts.TryGetValue(connection.Id, out var unread) && unread > 0)
+                            {
+                                <span class="badge bg-danger me-2 align-self-center"
+                                      aria-label="@unread unread messages">@unread new</span>
+                            }
+                            <button type="button" class="btn btn-primary btn-sm"
+                                    aria-label="Message @connection.First @connection.Last"
+                                    @onclick="() => OpenConversation(connection)">
+                                <i class="bi bi-chat-dots" aria-hidden="true"></i> Message
+                            </button>
+                        </ActionContent>
+                    </AlumniCard>
+                </div>
+            }
+        </div>
     }
     else
     {
-        <p>No connections at the moment.</p>
+        <p class="text-muted">You haven't connected with anyone yet. Here are some people you may know.</p>
+    }
+
+    @if (recommendations.Any())
+    {
+        <h2 class="cc-section-title mt-4">People you may know</h2>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            @foreach (var recommendation in recommendations)
+            {
+                <div class="col">
+                    <AlumniCard Alumni="recommendation">
+                        <ActionContent>
+                            <ConnectButton Recipient="recommendation" CurrentUser="currentUser"
+                                           Status="@GetRecommendationStatus(recommendation.Id)"
+                                           OnRequestSent="OnRecommendationRequestSent" />
+                        </ActionContent>
+                    </AlumniCard>
+                </div>
+            }
+        </div>
     }
 }
 
+<Modal @bind-Show="showConversation" Title="@ConversationTitle">
+    <ChildContent>
+        @if (conversationError is not null)
+        {
+            <StatusMessage Message="@conversationError" IsError="true" />
+        }
+
+        @if (isLoadingConversation)
+        {
+            <LoadingSpinner Text="Loading conversation…" />
+        }
+        else if (conversationMessages.Count == 0)
+        {
+            <p class="text-muted">No messages yet. Say hello!</p>
+        }
+        else
+        {
+            <div class="cc-message-list">
+                @foreach (var message in conversationMessages)
+                {
+                    var isMine = currentUser is not null && message.SenderId == currentUser.Id;
+                    <div class="cc-message-bubble @(isMine ? "cc-message-bubble--mine" : "cc-message-bubble--theirs")">
+                        <div class="cc-message-body">@message.Body</div>
+                        <div class="cc-message-meta small text-muted">@($"{message.SentAt:g} UTC")</div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="cc-compose mt-3">
+            <label for="composeBody" class="form-label visually-hidden">Message</label>
+            <textarea id="composeBody" class="form-control" rows="2" placeholder="Write a message…"
+                      @bind="composeText" @bind:event="oninput" disabled="@isSending"></textarea>
+        </div>
+    </ChildContent>
+    <FooterContent>
+        <button type="button" class="btn btn-outline-secondary" @onclick="CloseConversation">Close</button>
+        <button type="button" class="btn btn-primary" @onclick="SendMessage"
+                disabled="@(isSending || string.IsNullOrWhiteSpace(composeText))">
+            @if (isSending)
+            {
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span> Sending…</span>
+            }
+            else
+            {
+                <span>Send</span>
+            }
+        </button>
+    </FooterContent>
+</Modal>
+
 @code {
-    private List<Alumni> allConnections = new List<Alumni>();
+    private const int RecommendationCount = 6;
+
+    private List<Alumni> allConnections = new();
+    private List<Alumni> recommendations = new();
+    private Dictionary<long, string> recommendationStatuses = new();
+    private Dictionary<long, int> unreadCounts = new();
     private Alumni? currentUser;
     private string? errorMessage;
+    private bool isLoading = true;
+
+    private Alumni? selectedConnection;
+    private bool showConversation;
+    private List<Message> conversationMessages = new();
+    private string composeText = string.Empty;
+    private bool isLoadingConversation;
+    private bool isSending;
+    private string? conversationError;
+
+    private string ConversationTitle =>
+        selectedConnection is null ? "Conversation" : $"Conversation with {selectedConnection.First} {selectedConnection.Last}";
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,6 +156,7 @@ else
         var user = authState.User;
         if (user.Identity is not { IsAuthenticated: true, Name: { Length: > 0 } userName })
         {
+            isLoading = false;
             return;
         }
 
@@ -91,11 +177,193 @@ else
                     }
                 }
             }
+
+            await LoadUnreadCountsAsync();
+            await LoadRecommendationsAsync();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to load connections for {User}", user.Identity?.Name);
             errorMessage = "Could not load your connections. Please try again later.";
         }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadUnreadCountsAsync()
+    {
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        var unread = await DBService.GetUnreadMessages(currentUser.Id);
+        unreadCounts = unread
+            .GroupBy(m => m.SenderId)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    private async Task LoadRecommendationsAsync()
+    {
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        var connectedIds = currentUser.ConnectionList?.ToHashSet() ?? new HashSet<long>();
+        var everyone = await DBService.GetAllAlumni();
+
+        recommendations = everyone
+            .Where(a => a.Id != currentUser.Id && !connectedIds.Contains(a.Id))
+            .Take(RecommendationCount)
+            .ToList();
+
+        foreach (var recommendation in recommendations)
+        {
+            try
+            {
+                if (await DBService.ConnectionRequestExists(currentUser.Id, recommendation.Id))
+                {
+                    recommendationStatuses[recommendation.Id] = "Pending";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to check recommendation status for {RecommendationId}", recommendation.Id);
+                // Fail open: leave it as a plain "Connect" button if the check errors.
+            }
+        }
+    }
+
+    private string? GetRecommendationStatus(long id) =>
+        recommendationStatuses.TryGetValue(id, out var status) ? status : null;
+
+    private void OnRecommendationRequestSent(long recipientId)
+    {
+        recommendationStatuses[recipientId] = "Pending";
+    }
+
+    private async Task OpenConversation(Alumni connection)
+    {
+        selectedConnection = connection;
+        composeText = string.Empty;
+        conversationMessages = new List<Message>();
+        conversationError = null;
+        showConversation = true;
+
+        if (currentUser is null)
+        {
+            conversationError = "Could not determine your profile. Please try again later.";
+            return;
+        }
+
+        isLoadingConversation = true;
+        try
+        {
+            conversationMessages = await DBService.GetConversation(currentUser.Id, connection.Id);
+            await MarkConversationReadAsync(connection);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load conversation between {UserId} and {ConnectionId}", currentUser.Id, connection.Id);
+            conversationError = "Could not load your conversation. Please try again later.";
+        }
+        finally
+        {
+            isLoadingConversation = false;
+        }
+    }
+
+    private async Task MarkConversationReadAsync(Alumni connection)
+    {
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        var unreadFromThem = conversationMessages
+            .Where(m => m.SenderId == connection.Id && m.RecipientId == currentUser.Id && !m.IsRead)
+            .ToList();
+
+        if (unreadFromThem.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            foreach (var message in unreadFromThem)
+            {
+                message.IsRead = true;
+                await DBService.PostData("Messages", message);
+            }
+
+            // Clear the unread badge for this connection now that it's been read.
+            unreadCounts.Remove(connection.Id);
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal: the conversation still opened; the badge just won't clear this time.
+            Logger.LogError(ex, "Failed to mark messages read from {ConnectionId}", connection.Id);
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(composeText) || selectedConnection is null)
+        {
+            return;
+        }
+
+        if (currentUser is null)
+        {
+            conversationError = "Could not determine your profile. Please try again later.";
+            return;
+        }
+
+        isSending = true;
+        try
+        {
+            var message = new Message
+            {
+                Id = Random.Shared.NextInt64(1, long.MaxValue),
+                SenderId = currentUser.Id,
+                RecipientId = selectedConnection.Id,
+                Body = composeText.Trim(),
+                SentAt = DateTimeOffset.UtcNow
+            };
+
+            await DBService.PostData("Messages", message);
+
+            try
+            {
+                await DBService.AddNotification(selectedConnection.Id, $"{currentUser.First} {currentUser.Last} sent you a message.");
+            }
+            catch (Exception ex)
+            {
+                // The message itself is already sent above - a failed notification shouldn't block that.
+                Logger.LogError(ex, "Failed to create message notification for {RecipientId}", selectedConnection.Id);
+            }
+
+            conversationMessages.Add(message);
+            composeText = string.Empty;
+            conversationError = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send message from {SenderId} to {RecipientId}", currentUser.Id, selectedConnection.Id);
+            conversationError = "Could not send your message. Please try again later.";
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private void CloseConversation()
+    {
+        showConversation = false;
     }
 }

@@ -1,0 +1,66 @@
+@using CougarConnect.Models
+
+<div class="card cc-alumni-card h-100">
+    <div class="card-body">
+        <div class="cc-alumni-header">
+            <div class="cc-alumni-avatar" aria-hidden="true">@GetInitials()</div>
+            <div>
+                <h3 class="card-title h5 mb-0">@Alumni.First @Alumni.Last</h3>
+                @if (!string.IsNullOrWhiteSpace(Headline))
+                {
+                    <div class="cc-alumni-headline">@Headline</div>
+                }
+            </div>
+        </div>
+        <ul class="list-unstyled cc-alumni-meta small">
+            @if (!string.IsNullOrWhiteSpace(Alumni.City))
+            {
+                <li><i class="bi bi-geo-alt" aria-hidden="true"></i>@Alumni.City</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Alumni.Company))
+            {
+                <li><i class="bi bi-building" aria-hidden="true"></i>@Alumni.Company</li>
+            }
+        </ul>
+        @if (ActionContent is not null)
+        {
+            <div class="cc-alumni-actions">
+                @ActionContent
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Alumni Alumni { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment? ActionContent { get; set; }
+
+    private string Headline
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(Alumni.Major))
+            {
+                parts.Add(Alumni.Major);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Alumni.GradYear))
+            {
+                parts.Add($"Class of {Alumni.GradYear}");
+            }
+
+            return string.Join(" • ", parts);
+        }
+    }
+
+    private string GetInitials()
+    {
+        var first = string.IsNullOrEmpty(Alumni.First) ? string.Empty : Alumni.First[..1];
+        var last = string.IsNullOrEmpty(Alumni.Last) ? string.Empty : Alumni.Last[..1];
+        return (first + last).ToUpperInvariant();
+    }
+}

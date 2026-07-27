@@ -1,19 +1,13 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+<NavMenu />
+
+<main class="content" id="main-content">
+    <div class="container-xxl px-3 px-md-4 py-4">
+        @Body
     </div>
-
-    <main>
-        <div class="top-row px-4">
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+</main>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.

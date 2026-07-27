@@ -1,0 +1,182 @@
+@page "/ConnectionRequest/Respond"
+@using CougarConnect.Models
+@using CougarConnect.Services
+@inject SupabaseService DBService
+@inject ILogger<ConnectionRequestResponse> Logger
+
+<PageTitle>Connection Request</PageTitle>
+
+<div class="cc-auth-card">
+    <div class="cc-auth-brand">Cougar<span class="cc-brand-accent-dark">Connect</span></div>
+    <h1 class="cc-page-title mb-3">Connection Request</h1>
+
+    @if (errorMessage is not null)
+    {
+        <StatusMessage Message="@errorMessage" IsError="true" />
+    }
+    @if (resultMessage is not null)
+    {
+        <StatusMessage Message="@resultMessage" IsError="false" />
+    }
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Text="Loading request…" />
+    }
+    else if (request is not null && errorMessage is null && resultMessage is null)
+    {
+        <div class="cc-request-header">
+            <div class="cc-request-avatar" aria-hidden="true">@RequesterInitials</div>
+            <p class="mb-0">
+                <strong>@(requester?.First) @(requester?.Last)</strong> wants to connect with you.
+            </p>
+        </div>
+
+        <p class="fw-semibold mb-1 mt-3">@request.RequestSubject</p>
+        <blockquote class="cc-request-message">@request.Message</blockquote>
+
+        <div class="d-flex gap-2 mt-3">
+            <form @onsubmit="AcceptAsync" @formname="accept-request" method="post">
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-primary" disabled="@isResponding">
+                    <i class="bi bi-check-lg" aria-hidden="true"></i> Accept
+                </button>
+            </form>
+            <form @onsubmit="DeclineAsync" @formname="decline-request" method="post">
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-outline-secondary" disabled="@isResponding">Decline</button>
+            </form>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Token { get; set; }
+
+    private ConnectionRequest? request;
+    private Alumni? requester;
+    private bool isLoading = true;
+    private bool isResponding;
+    private string? errorMessage;
+    private string? resultMessage;
+
+    private string RequesterInitials
+    {
+        get
+        {
+            var first = string.IsNullOrEmpty(requester?.First) ? string.Empty : requester.First[..1];
+            var last = string.IsNullOrEmpty(requester?.Last) ? string.Empty : requester.Last[..1];
+            return (first + last).ToUpperInvariant();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Token))
+        {
+            errorMessage = "This link is invalid.";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            request = await DBService.GetConnectionRequestByToken(Token);
+
+            if (request is null)
+            {
+                errorMessage = "This connection request could not be found.";
+            }
+            else if (request.Status != "Pending")
+            {
+                resultMessage = $"This request has already been {request.Status.ToLowerInvariant()}.";
+            }
+            else
+            {
+                var requesterResult = await DBService.GetData<Alumni>(request.RequesterId.ToString(), "id");
+                requester = requesterResult.FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load connection request for the given token");
+            errorMessage = "Something went wrong loading this request. Please try again later.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AcceptAsync()
+    {
+        if (request is null)
+        {
+            return;
+        }
+
+        isResponding = true;
+        try
+        {
+            request.Status = "Accepted";
+            await DBService.PostData("ConnectionRequests", request);
+            await DBService.AddMutualConnection(request.RequesterId, request.RecipientId);
+            resultMessage = "Connection accepted!";
+            await NotifyRequester(request, "accepted");
+            request = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to accept connection request");
+            errorMessage = "Could not accept this request. Please try again later.";
+        }
+        finally
+        {
+            isResponding = false;
+        }
+    }
+
+    private async Task DeclineAsync()
+    {
+        if (request is null)
+        {
+            return;
+        }
+
+        isResponding = true;
+        try
+        {
+            request.Status = "Declined";
+            await DBService.PostData("ConnectionRequests", request);
+            resultMessage = "Connection declined.";
+            await NotifyRequester(request, "declined");
+            request = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to decline connection request");
+            errorMessage = "Could not decline this request. Please try again later.";
+        }
+        finally
+        {
+            isResponding = false;
+        }
+    }
+
+    private async Task NotifyRequester(ConnectionRequest respondedRequest, string verb)
+    {
+        try
+        {
+            var recipientResult = await DBService.GetData<Alumni>(respondedRequest.RecipientId.ToString(), "id");
+            var recipient = recipientResult.FirstOrDefault(a => a.Id == respondedRequest.RecipientId);
+            var recipientName = recipient is null ? "Someone" : $"{recipient.First} {recipient.Last}";
+            await DBService.AddNotification(respondedRequest.RequesterId, $"{recipientName} {verb} your connection request.");
+        }
+        catch (Exception ex)
+        {
+            // The accept/decline itself already succeeded above - a failed notification shouldn't undo that.
+            Logger.LogError(ex, "Failed to create notification for requester {RequesterId}", respondedRequest.RequesterId);
+        }
+    }
+}

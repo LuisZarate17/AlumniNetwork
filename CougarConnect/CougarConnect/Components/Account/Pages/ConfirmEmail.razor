@@ -11,9 +11,14 @@
 
 <PageTitle>Confirm email</PageTitle>
 
-<h1>Confirm email</h1>
-
-<StatusMessage Message="@message" />
+<AuthCard Title="Confirm email">
+    <ChildContent>
+        <StatusMessage Message="@message" />
+    </ChildContent>
+    <FooterContent>
+        <p><a href="Account/Login">Back to login</a></p>
+    </FooterContent>
+</AuthCard>
 
 @code {
     private string? message;

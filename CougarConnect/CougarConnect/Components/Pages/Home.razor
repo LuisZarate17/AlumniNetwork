@@ -1,7 +1,87 @@
-﻿@page "/"
+@page "/"
 
 <PageTitle>Home</PageTitle>
 
-<h1>CougarConnect Home </h1>
+<AuthorizeView>
+    <Authorized>
+        <section class="py-4">
+            <h1 class="cc-page-title">Welcome back, Coug!</h1>
+            <p class="cc-page-subtitle">Pick up where you left off.</p>
 
-Welcome to CougarConnect where you can find WSU Alumni
+            <div class="row row-cols-1 row-cols-md-3 g-3">
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
+                            <h2 class="h5 card-title">Search Alumni</h2>
+                            <p class="card-text text-muted small">Find fellow Cougars by name, major, city, or company.</p>
+                            <a href="ConnectionSearch" class="stretched-link" aria-label="Search Alumni"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                            <h2 class="h5 card-title">Your Connections</h2>
+                            <p class="card-text text-muted small">See who you're connected with and start a conversation.</p>
+                            <a href="Connections" class="stretched-link" aria-label="Your Connections"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-bell"></i></div>
+                            <h2 class="h5 card-title">Recent Activity</h2>
+                            <p class="card-text text-muted small">Catch up on new messages and responses to your requests.</p>
+                            <a href="RecentActivity" class="stretched-link" aria-label="Recent Activity"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </Authorized>
+    <NotAuthorized>
+        <section class="py-5 text-center">
+            <h1 class="display-5 fw-bold">Welcome to CougarConnect</h1>
+            <p class="lead text-muted mx-auto" style="max-width: 40rem;">
+                Find and connect with WSU alumni — see where fellow Cougars have landed and grow your network.
+            </p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+                <a href="Account/Register" class="btn btn-primary btn-lg">Join now</a>
+                <a href="Account/Login" class="btn btn-outline-primary btn-lg">Log In</a>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-3 g-3 text-start">
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
+                            <h2 class="h5 card-title">Find alumni</h2>
+                            <p class="card-text text-muted small">Search the WSU alumni directory by name, major, city, or company.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                            <h2 class="h5 card-title">Connect</h2>
+                            <p class="card-text text-muted small">Send a connection request — they accept or decline from their inbox.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card cc-home-card h-100">
+                        <div class="card-body">
+                            <div class="cc-home-icon" aria-hidden="true"><i class="bi bi-chat-dots"></i></div>
+                            <h2 class="h5 card-title">Message</h2>
+                            <p class="card-text text-muted small">Chat with your connections and grow your professional network.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </NotAuthorized>
+</AuthorizeView>

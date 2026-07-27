@@ -1,39 +1,265 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+/* ============================================================
+   CougarConnect design tokens & theme system
+   - Brand constants are theme-invariant (crimson never changes).
+   - Semantic tokens (--cc-bg, --cc-surface, ...) have light values
+     under :root and dark values under [data-bs-theme="dark"].
+   - Scoped .razor.css files consume ONLY --cc-* tokens; all theme
+     knowledge lives in this file.
+   ============================================================ */
+
+:root {
+    /* Brand constants (theme-invariant) */
+    --cc-primary: #A60F2D;
+    --cc-primary-hover: #8F0D27;
+    --cc-primary-active: #7C0B21;
+    --cc-primary-rgb: 166, 15, 45;
+
+    --cc-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --cc-radius: 0.5rem;
 }
 
-a, .btn-link {
-    color: #006bb7;
+:root,
+[data-bs-theme="light"] {
+    color-scheme: light;
+
+    --cc-bg: #F3F2EF;
+    --cc-surface: #FFFFFF;
+    --cc-surface-muted: #F1F3F5;
+    --cc-border: #E4E2DD;
+    --cc-text: #1F2329;
+    --cc-text-muted: #5E6670;
+    --cc-link: #A60F2D;
+    --cc-link-rgb: 166, 15, 45;
+    --cc-primary-subtle: #F7E6E9;
+    --cc-navbar-bg: #A60F2D;
+    --cc-shadow-sm: 0 1px 3px rgba(0, 0, 0, .08);
+    --cc-shadow-md: 0 4px 12px rgba(0, 0, 0, .10);
+    --cc-valid: #1a8a43;
+    --cc-invalid: #d21c1c;
+
+    /* Bridge Bootstrap 5.3 variables onto our tokens */
+    --bs-primary: var(--cc-primary);
+    --bs-primary-rgb: var(--cc-primary-rgb);
+    --bs-body-bg: var(--cc-bg);
+    --bs-body-color: var(--cc-text);
+    --bs-border-color: var(--cc-border);
+    --bs-secondary-color: var(--cc-text-muted);
+    --bs-tertiary-bg: var(--cc-surface-muted);
+    --bs-link-color-rgb: var(--cc-link-rgb);
+    --bs-link-hover-color-rgb: var(--cc-link-rgb);
+    --bs-focus-ring-color: rgba(var(--cc-primary-rgb), .25);
 }
+
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --cc-bg: #1A1D21;
+    --cc-surface: #24282D;
+    --cc-surface-muted: #2C3136;
+    --cc-border: #3A3F45;
+    --cc-text: #E9ECEF;
+    --cc-text-muted: #A5ADB5;
+    --cc-link: #E4677C;
+    --cc-link-rgb: 228, 103, 124;
+    --cc-primary-subtle: #46141F;
+    --cc-navbar-bg: #821023;
+    --cc-shadow-sm: 0 1px 3px rgba(0, 0, 0, .45);
+    --cc-shadow-md: 0 4px 14px rgba(0, 0, 0, .55);
+    --cc-valid: #4cc27a;
+    --cc-invalid: #f07373;
+
+    --bs-primary: var(--cc-primary);
+    --bs-primary-rgb: var(--cc-primary-rgb);
+    --bs-body-bg: var(--cc-bg);
+    --bs-body-color: var(--cc-text);
+    --bs-border-color: var(--cc-border);
+    --bs-secondary-color: var(--cc-text-muted);
+    --bs-tertiary-bg: var(--cc-surface-muted);
+    --bs-link-color-rgb: var(--cc-link-rgb);
+    --bs-link-hover-color-rgb: var(--cc-link-rgb);
+    --bs-focus-ring-color: rgba(var(--cc-primary-rgb), .35);
+}
+
+html, body {
+    font-family: var(--cc-font-sans);
+}
+
+/* Cards and modals sit on the surface color, not the page background */
+.card {
+    --bs-card-bg: var(--cc-surface);
+    --bs-card-border-color: var(--cc-border);
+}
+
+.modal-content {
+    background-color: var(--cc-surface);
+}
+
+.list-group {
+    --bs-list-group-bg: var(--cc-surface);
+    --bs-list-group-border-color: var(--cc-border);
+}
+
+/* ------------------------------------------------------------
+   Buttons: crimson primary; outline-primary secondary CTA;
+   stock outline-secondary for neutral/cancel actions.
+   ------------------------------------------------------------ */
 
 .btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--cc-primary);
+    --bs-btn-border-color: var(--cc-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--cc-primary-hover);
+    --bs-btn-hover-border-color: var(--cc-primary-hover);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--cc-primary-active);
+    --bs-btn-active-border-color: var(--cc-primary-active);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--cc-primary);
+    --bs-btn-disabled-border-color: var(--cc-primary);
+    --bs-btn-focus-shadow-rgb: var(--cc-primary-rgb);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn-outline-primary {
+    --bs-btn-color: var(--cc-link);
+    --bs-btn-border-color: var(--cc-link);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--cc-primary);
+    --bs-btn-hover-border-color: var(--cc-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--cc-primary-active);
+    --bs-btn-active-border-color: var(--cc-primary-active);
+    --bs-btn-disabled-color: var(--cc-link);
+    --bs-btn-disabled-border-color: var(--cc-link);
+    --bs-btn-focus-shadow-rgb: var(--cc-primary-rgb);
 }
 
-.content {
-    padding-top: 1.1rem;
+.btn:focus-visible,
+.btn:active:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 .25rem rgba(var(--cc-primary-rgb), .25);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cc-primary);
+}
+
+.form-check-input:checked {
+    background-color: var(--cc-primary);
+    border-color: var(--cc-primary);
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--cc-primary);
 }
 
 h1:focus {
     outline: none;
 }
 
+/* ------------------------------------------------------------
+   Typography patterns (global: static-SSR pages need them too)
+   ------------------------------------------------------------ */
+
+.cc-page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.cc-page-subtitle {
+    color: var(--cc-text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.cc-section-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* ------------------------------------------------------------
+   Empty states
+   ------------------------------------------------------------ */
+
+.cc-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--cc-text-muted);
+}
+
+.cc-empty-state .bi {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: .75rem;
+}
+
+.cc-empty-state h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cc-text);
+    margin-bottom: .35rem;
+}
+
+/* ------------------------------------------------------------
+   Auth / centered card (Identity pages, request-response page)
+   ------------------------------------------------------------ */
+
+.cc-auth-card {
+    max-width: 430px;
+    margin: 2rem auto;
+    background-color: var(--cc-surface);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-radius);
+    box-shadow: var(--cc-shadow-sm);
+    padding: 2rem;
+}
+
+.cc-auth-card--wide {
+    max-width: 560px;
+}
+
+.cc-auth-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cc-link);
+    margin-bottom: 1.25rem;
+}
+
+.cc-auth-brand .cc-brand-accent-dark {
+    font-weight: 400;
+    opacity: .75;
+}
+
+.cc-auth-footer {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--cc-border);
+    color: var(--cc-text-muted);
+    font-size: .925rem;
+}
+
+.cc-auth-footer p {
+    margin-bottom: .35rem;
+}
+
+/* ------------------------------------------------------------
+   Validation
+   ------------------------------------------------------------ */
+
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid var(--cc-valid);
 }
 
 .invalid {
-    outline: 1px solid #e50000;
+    outline: 1px solid var(--cc-invalid);
 }
 
 .validation-message {
-    color: #e50000;
+    color: var(--cc-invalid);
 }
 
 .blazor-error-boundary {
@@ -45,7 +271,3 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
-}

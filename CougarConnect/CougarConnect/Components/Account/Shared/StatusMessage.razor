@@ -1,29 +1,64 @@
-﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+@if (!dismissed && !string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
-        @DisplayMessage
+    var alertClass = IsErrorMessage ? "danger" : "success";
+    var iconClass = IsErrorMessage ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+    <div class="alert alert-@alertClass alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+        <i class="bi @iconClass" aria-hidden="true"></i>
+        <span>@DisplayMessage</span>
+        @if (HttpContext is not null)
+        {
+            @* Static (server-rendered) pages have no interactive circuit, so dismiss with plain JS. *@
+            <button type="button" class="btn-close" aria-label="Close" onclick="this.closest('.alert')?.remove()"></button>
+        }
+        else
+        {
+            <button type="button" class="btn-close" aria-label="Close" @onclick="Dismiss"></button>
+        }
     </div>
 }
 
 @code {
     private string? messageFromCookie;
+    private string? lastDisplayedMessage;
+    private bool dismissed;
 
     [Parameter]
     public string? Message { get; set; }
 
+    [Parameter]
+    public bool? IsError { get; set; }
+
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext? HttpContext { get; set; }
 
     private string? DisplayMessage => Message ?? messageFromCookie;
 
+    private bool IsErrorMessage => IsError ?? (DisplayMessage?.StartsWith("Error") ?? false);
+
     protected override void OnInitialized()
     {
-        messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
-
-        if (messageFromCookie is not null)
+        if (HttpContext is not null)
         {
-            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+
+            if (messageFromCookie is not null)
+            {
+                HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            }
         }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (DisplayMessage != lastDisplayedMessage)
+        {
+            dismissed = false;
+            lastDisplayedMessage = DisplayMessage;
+        }
+    }
+
+    private void Dismiss()
+    {
+        dismissed = true;
     }
 }

@@ -1,0 +1,23 @@
+.cc-home-card {
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-radius);
+    box-shadow: var(--cc-shadow-sm);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.cc-home-card:hover {
+    box-shadow: var(--cc-shadow-md);
+}
+
+.cc-home-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: var(--cc-primary-subtle);
+    color: var(--cc-link);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}

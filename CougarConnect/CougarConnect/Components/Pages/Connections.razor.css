@@ -1,0 +1,36 @@
+.cc-message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.cc-message-bubble {
+    max-width: 80%;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--cc-radius);
+}
+
+.cc-message-bubble--mine {
+    align-self: flex-end;
+    background-color: var(--cc-primary-subtle);
+    border-bottom-right-radius: 0.15rem;
+}
+
+.cc-message-bubble--theirs {
+    align-self: flex-start;
+    background-color: var(--cc-surface-muted);
+    border: 1px solid var(--cc-border);
+    border-bottom-left-radius: 0.15rem;
+}
+
+.cc-message-meta {
+    margin-top: 0.15rem;
+    color: var(--cc-text-muted);
+}
+
+.cc-compose {
+    border-top: 1px solid var(--cc-border);
+}

@@ -1,89 +1,47 @@
-﻿@implements IDisposable
-
-@inject NavigationManager NavigationManager
-
-<div class="top-row ps-3 navbar navbar-dark" style="background-color: #A60F2D;">
+<header class="cc-navbar navbar">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#" style="font-size: 1.2rem;">
-            CougarConnect
-            <!-- TODO: replace with real WSU-licensed logo asset -->
-            <img src="images/logo-placeholder.png"
-                 alt="WSU Logo" width="60" style="height: auto; margin-left: 5px; margin-top: -9px;">
+        <a class="navbar-brand cc-brand" href="">
+            <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+            Cougar<span class="cc-brand-accent">Connect</span>
         </a>
-    </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+        <input type="checkbox" id="navToggle" class="cc-nav-toggle" aria-label="Toggle navigation menu" />
 
-<div class="nav-scrollable" style="background-image: linear-gradient(#A60F2D, #4D4D4D 85%" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="ConnectionSearch">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Connection Search
+        <nav class="cc-nav-links" onclick="document.getElementById('navToggle').click()">
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink class="cc-nav-link" href="ConnectionSearch">
+                        <i class="bi bi-search" aria-hidden="true"></i> Connection Search
                     </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Connections">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Connections
+                    <NavLink class="cc-nav-link" href="Connections">
+                        <i class="bi bi-people-fill" aria-hidden="true"></i> Connections
                     </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Manage Account
+                    <NavLink class="cc-nav-link" href="RecentActivity">
+                        <i class="bi bi-bell-fill" aria-hidden="true"></i> Recent Activity
                     </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
+                    <NavLink class="cc-nav-link" href="Account/Manage">
+                        <i class="bi bi-person-gear" aria-hidden="true"></i> Manage Account
+                    </NavLink>
+                    <form action="Account/Logout" method="post" class="cc-nav-logout-form">
                         <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                        <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                        <button type="submit" class="cc-nav-link cc-nav-link-button">
+                            <i class="bi bi-box-arrow-left" aria-hidden="true"></i> Logout
                         </button>
                     </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink class="cc-nav-link" href="" Match="NavLinkMatch.All">
+                        <i class="bi bi-house-door-fill" aria-hidden="true"></i> Home
                     </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+                    <NavLink class="cc-nav-link" href="Account/Register">
+                        <i class="bi bi-person-plus" aria-hidden="true"></i> Register
                     </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                    <NavLink class="cc-nav-link" href="Account/Login">
+                        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login
                     </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
-
-@code {
-    private string? currentUrl;
-
-    protected override void OnInitialized()
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
-}
-
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+    </div>
+</header>

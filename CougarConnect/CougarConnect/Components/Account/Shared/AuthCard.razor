@@ -1,0 +1,28 @@
+@* Shared chrome for all Identity/auth pages: a centered card with the brand
+   wordmark and page title. Pure markup - no logic - so it is static-SSR safe. *@
+
+<div class="cc-auth-card @(Wide ? "cc-auth-card--wide" : null)">
+    <div class="cc-auth-brand">Cougar<span class="cc-brand-accent-dark">Connect</span></div>
+    <h1 class="cc-page-title mb-3">@Title</h1>
+    @ChildContent
+    @if (FooterContent is not null)
+    {
+        <div class="cc-auth-footer">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    [Parameter]
+    public bool Wide { get; set; }
+}

@@ -14,7 +14,7 @@
 
 <PageTitle>Manage email</PageTitle>
 
-<h3>Manage email</h3>
+<h2 class="cc-section-title">Manage email</h2>
 
 <StatusMessage Message="@message"/>
 <div class="row">
@@ -28,27 +28,25 @@
             @if (isEmailConfirmed)
             {
                 <div class="form-floating mb-3 input-group">
-                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
-                    <div class="input-group-append">
-                        <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
-                    </div>
+                    <input type="text" id="email" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                    <span class="input-group-text text-success fw-bold" title="Confirmed"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
                     <label for="email" class="form-label">Email</label>
                 </div>
             }
             else
             {
                 <div class="form-floating mb-3">
-                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                    <input type="text" id="email" value="@email" class="form-control" placeholder="Please enter your email." disabled />
                     <label for="email" class="form-label">Email</label>
                     <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
                 </div>
             }
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+                <InputText id="new-email" @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
                 <label for="new-email" class="form-label">New email</label>
                 <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
+            <button type="submit" class="btn btn-primary">Change email</button>
         </EditForm>
     </div>
 </div>
@@ -89,7 +87,7 @@
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+        await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, callbackUrl);
 
         message = "Confirmation link to change email sent. Please check your email.";
     }
@@ -108,7 +106,7 @@
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
 
-        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+        await EmailSender.SendConfirmationLinkAsync(user, email, callbackUrl);
 
         message = "Verification email sent. Please check your email.";
     }

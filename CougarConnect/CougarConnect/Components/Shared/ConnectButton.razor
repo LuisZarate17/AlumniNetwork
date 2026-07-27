@@ -1,0 +1,223 @@
+@using CougarConnect.Components.Account
+@using CougarConnect.Models
+@using CougarConnect.Services
+@inject NavigationManager NavigationManager
+@inject SupabaseService Supabase
+@inject IEmailSender EmailSender
+@inject ILogger<ConnectButton> Logger
+
+@if (Status == "Connected")
+{
+    <button type="button" class="btn btn-outline-success btn-sm" disabled>
+        <i class="bi bi-check-lg" aria-hidden="true"></i> Connected
+    </button>
+}
+else if (Status == "Pending")
+{
+    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+        <i class="bi bi-clock" aria-hidden="true"></i> Pending
+    </button>
+}
+else if (Status == "Yourself")
+{
+    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+        <i class="bi bi-person" aria-hidden="true"></i> Yourself
+    </button>
+}
+else
+{
+    <button type="button" class="btn btn-primary btn-sm" @onclick="OpenAsync">
+        <i class="bi bi-person-plus" aria-hidden="true"></i> Connect
+    </button>
+}
+
+<Modal @bind-Show="showModal" Title="Connection Request">
+    <ChildContent>
+        @if (alreadyRequested)
+        {
+            <p>You've already sent a connection request to <strong>@Recipient.First @Recipient.Last</strong>.</p>
+        }
+        else
+        {
+            <p>Would you like to send a connection request to <strong>@Recipient.First @Recipient.Last</strong>?</p>
+        }
+    </ChildContent>
+    <FooterContent>
+        @if (alreadyRequested)
+        {
+            <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">Close</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">No</button>
+            <button type="button" class="btn btn-primary" @onclick="OpenConnectionForm">Yes</button>
+        }
+    </FooterContent>
+</Modal>
+
+<Modal @bind-Show="showConnectionForm" Title="Send Connection Request">
+    <ChildContent>
+        @if (formError is not null)
+        {
+            <div class="alert alert-danger" role="alert">@formError</div>
+        }
+        <EditForm Model="@connectionRequest" OnValidSubmit="HandleConnectionRequestSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="requestSubject" class="form-label">Request Subject</label>
+                <InputText id="requestSubject" class="form-control" @bind-Value="connectionRequest.RequestSubject" />
+            </div>
+
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <InputTextArea id="message" class="form-control" @bind-Value="connectionRequest.Message" />
+            </div>
+
+            <p class="text-muted small">You may only send one request per Alumni, make it count!</p>
+            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span> Sending…</span>
+                }
+                else
+                {
+                    <span>Send Request</span>
+                }
+            </button>
+        </EditForm>
+    </ChildContent>
+</Modal>
+
+@code {
+    [Parameter, EditorRequired]
+    public Alumni Recipient { get; set; } = null!;
+
+    [Parameter]
+    public Alumni? CurrentUser { get; set; }
+
+    /// <summary>Precomputed status ("Connected"/"Pending"/"Yourself"); null shows an interactive Connect button.</summary>
+    [Parameter]
+    public string? Status { get; set; }
+
+    /// <summary>Invoked (with the recipient's id) once a request has been successfully sent.</summary>
+    [Parameter]
+    public EventCallback<long> OnRequestSent { get; set; }
+
+    private bool showModal;
+    private bool showConnectionForm;
+    private bool alreadyRequested;
+    private bool isSubmitting;
+    private string? formError;
+    private ConnectionRequest connectionRequest = new();
+
+    private async Task OpenAsync()
+    {
+        alreadyRequested = false;
+        formError = null;
+
+        if (CurrentUser is not null)
+        {
+            try
+            {
+                alreadyRequested = await Supabase.ConnectionRequestExists(CurrentUser.Id, Recipient.Id);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to check existing connection request between {CurrentUserId} and {RecipientId}", CurrentUser.Id, Recipient.Id);
+                // Fail open: don't block the click if the existence check itself errors.
+            }
+        }
+
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private void OpenConnectionForm()
+    {
+        showModal = false;
+        showConnectionForm = true;
+    }
+
+    private async Task HandleConnectionRequestSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(connectionRequest.RequestSubject) || string.IsNullOrWhiteSpace(connectionRequest.Message))
+        {
+            formError = "Please fill out both the subject and the message.";
+            return;
+        }
+
+        if (CurrentUser is null)
+        {
+            formError = "Could not determine your profile. Please try again later.";
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            var token = Guid.NewGuid().ToString("N");
+            var request = new ConnectionRequest
+            {
+                Id = Random.Shared.NextInt64(1, long.MaxValue),
+                RequesterId = CurrentUser.Id,
+                RecipientId = Recipient.Id,
+                RequestSubject = connectionRequest.RequestSubject,
+                Message = connectionRequest.Message,
+                Token = token,
+                Status = "Pending",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            await Supabase.PostData("ConnectionRequests", request);
+
+            var responseUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("ConnectionRequest/Respond").AbsoluteUri,
+                new Dictionary<string, object?> { ["token"] = token });
+
+            var requesterName = $"{Capitalize(CurrentUser.First)} {Capitalize(CurrentUser.Last)}";
+            var body = $"Hi,\n\n{connectionRequest.Message}\n\nThis request was sent by {requesterName} ({CurrentUser.Email}), a fellow WSU alum on CougarConnect.\n\nTo accept or decline, visit:\n{responseUrl}\n\n— CougarConnect";
+
+            try
+            {
+                await EmailSender.SendEmailAsync(Recipient.Email, $"Cougar Connect Request: {connectionRequest.RequestSubject}", body);
+            }
+            catch (Exception ex)
+            {
+                // The request is already recorded above regardless of whether the notification
+                // email succeeds - a failed notification shouldn't block the request from being made.
+                Logger.LogError(ex, "Failed to send connection request notification email to {Email}", Recipient.Email);
+            }
+
+            showConnectionForm = false;
+            formError = null;
+            connectionRequest = new ConnectionRequest();
+            await OnRequestSent.InvokeAsync(Recipient.Id);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send connection request from {CurrentUserId} to {RecipientId}", CurrentUser.Id, Recipient.Id);
+            formError = "Could not send the connection request. Please try again later.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static string Capitalize(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return char.ToUpperInvariant(value[0]) + value[1..];
+    }
+}
