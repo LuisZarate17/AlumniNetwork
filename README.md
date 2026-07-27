@@ -2,6 +2,7 @@
 
 > Alumni networking platform for WSU alumni — search graduates, send connection requests, and message the people you connect with.
 
+[![CI](https://github.com/LuisZarate17/AlumniNetwork/actions/workflows/ci.yml/badge.svg)](https://github.com/LuisZarate17/AlumniNetwork/actions/workflows/ci.yml)
 ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=flat&logo=dotnet&logoColor=white)
 ![Blazor](https://img.shields.io/badge/Blazor%20Server-512BD4?style=flat&logo=blazor&logoColor=white)
