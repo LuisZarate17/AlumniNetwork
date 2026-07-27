@@ -1,14 +1,53 @@
-Alumni Network Project
+# CougarConnect
 
-Project Description:
-The Alumni Network is a web-based platform designed to help WSU alumni connect with one another and stay in touch with their alma mater. Users can search for alumni profiles
-using filters like name, graduation year, city, and major. The platform enables users to view connections, manage requests, and access contact details for accepted connections.
+> Alumni networking platform for WSU alumni — search graduates, send connection requests, and message the people you connect with.
 
-Features:
-Search Alumni: Search alumni profiles using a case-insensitive search bar with autocomplete and filtering options.
-Manage Connections: View all connections, including accepted and declined.
-View Contact Information: Access detailed contact information for accepted connections.
-Interactive Interface: A user-friendly platform with streamlined functionality for alumni networking.
+![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white)
+![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=flat&logo=dotnet&logoColor=white)
+![Blazor](https://img.shields.io/badge/Blazor%20Server-512BD4?style=flat&logo=blazor&logoColor=white)
+![ASP.NET Core Identity](https://img.shields.io/badge/ASP.NET%20Core%20Identity-512BD4?style=flat&logo=dotnet&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white)
+![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=flat&logo=microsoftsqlserver&logoColor=white)
+![xUnit](https://img.shields.io/badge/Tested%20with-xUnit-5A2D91?style=flat)
+
+CougarConnect is a web platform that helps WSU alumni find each other and stay in touch with their alma mater. A single search box matches graduates across name, graduation year, city, major, and company; users send connection requests, exchange messages once connected, and get recommendations for people they may know.
+
+## Screenshots
+
+**Alumni search** — one box matches across name, major, city, company, and grad year, with live connection status on every result:
+
+![Alumni search](docs/screenshots/search.png)
+
+| Connections & recommendations | Direct messaging |
+|:---:|:---:|
+| ![Connections](docs/screenshots/connections.png) | ![Messaging](docs/screenshots/messaging.png) |
+| **Recent activity** | **Dashboard** |
+| ![Recent activity](docs/screenshots/recent-activity.png) | ![Dashboard](docs/screenshots/home.png) |
+
+> The screenshots above run against local mock data — every profile is clearly labeled as such, not a real WSU alumnus.
+
+## Features
+
+- **Alumni search** — one search box matches across name, grad year, city, major, and company (case-insensitive partial match), so you don't have to pick a field first.
+- **Connection requests** — send a request with a subject and message; the recipient accepts or declines in-app on the Recent Activity page or via a tokenized link emailed to them.
+- **Direct messaging** — once two alumni connect, they can exchange messages one-on-one, with unread indicators surfaced on the Connections page.
+- **People you may know** — recommendations built from the alumni directory, excluding yourself and people you're already connected to.
+- **Notifications & recent activity** — a running feed of incoming requests and updates.
+- **Secure accounts** — registration with email verification and optional two-factor authentication, built on ASP.NET Core Identity.
+
+## Architecture
+
+CougarConnect is a Blazor Server app: the browser holds a persistent SignalR connection to the server, which renders interactive components. Two data stores sit behind it — **ASP.NET Core Identity on SQL Server / LocalDB** handles accounts, sign-in, and 2FA, while **Supabase (PostgREST)** stores the alumni domain data (profiles, messages, connection requests, notifications), reached over `HttpClient` in [`SupabaseService`](CougarConnect/CougarConnect/Services/SupabaseService.cs). Transactional email (account confirmation, connection-request links) is sent over SMTP.
+
+```mermaid
+graph TD
+    B[Browser] <-->|SignalR| BS[Blazor Server App]
+    BS --> ID[ASP.NET Core Identity + EF Core]
+    ID --> SQL[(SQL Server / LocalDB<br/>accounts, 2FA)]
+    BS --> SS[SupabaseService<br/>HttpClient]
+    SS --> SB[(Supabase PostgREST<br/>Alumni, Messages,<br/>ConnectionRequests, Notifications)]
+    BS --> EM[EmailSender] --> SMTP[SMTP / Gmail]
+```
 
 ## Getting Started
 
