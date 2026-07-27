@@ -12,6 +12,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private const string TestDatabaseName = "CougarConnectTestDb";
 
+    public CustomWebApplicationFactory()
+    {
+        // Program.cs reads ConnectionStrings:DefaultConnection eagerly before builder.Build(),
+        // which is before ConfigureAppConfiguration below ever takes effect. Environment
+        // variables, unlike that override, are part of the config CreateBuilder(args) loads
+        // up front, so they're visible in time. Without this, tests only pass on machines that
+        // happen to have a real DefaultConnection sitting in dotnet user-secrets already.
+        Environment.SetEnvironmentVariable(
+            "ConnectionStrings__DefaultConnection",
+            "Server=(local);Database=DoesNotMatter;Trusted_Connection=True;");
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((_, config) =>
