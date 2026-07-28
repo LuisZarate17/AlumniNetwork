@@ -20,5 +20,10 @@ COPY --from=build /app/publish .
 
 # Bind to the port the host provides (Render injects $PORT), defaulting to 8080 locally.
 ENV ASPNETCORE_ENVIRONMENT=Production
+# Don't watch appsettings.json for changes. The default file-watchers create inotify
+# instances that exhaust the low per-user limit on constrained hosts (e.g. Render's free
+# tier), crashing CreateBuilder at startup. Config comes from env vars here, so hot-reload
+# isn't needed anyway.
+ENV DOTNET_hostBuilder__reloadConfigOnChange=false
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet CougarConnect.dll"]
