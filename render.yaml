@@ -1,0 +1,44 @@
+# Render Blueprint for CougarConnect.
+# In Render: New + -> Blueprint -> connect the AlumniNetwork repo. Render reads this
+# file, creates the service, and prompts for the secret values marked "sync: false".
+services:
+  - type: web
+    name: cougarconnect
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /Account/Login
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+      # Seeds the ready-to-use demo login on first boot (shown on the login page).
+      - key: DemoData__Seed
+        value: "true"
+
+      # Supabase project URL is not secret, so it's set here directly.
+      - key: Supabase__Url
+        value: https://licqwovdkxtidozzalec.supabase.co
+
+      # --- Secrets: set these in the Render dashboard when prompted (never committed) ---
+
+      # Supabase Postgres connection string (Session pooler), used by EF Core for Identity.
+      # Host=...pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+
+      # Supabase anon (public) key, used server-side by SupabaseService for the alumni data.
+      - key: Supabase__ApiKey
+        sync: false
+
+      # --- Email (optional): only needed if you want visitor self-registration to send
+      #     confirmation mail. The seeded demo login works without any of these. ---
+      - key: Email__SmtpHost
+        value: smtp.gmail.com
+      - key: Email__SmtpPort
+        value: "587"
+      - key: Email__FromAddress
+        sync: false
+      - key: Email__AppPassword
+        sync: false
