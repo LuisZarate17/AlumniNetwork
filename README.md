@@ -2,14 +2,17 @@
 
 > Alumni networking platform for WSU alumni — search graduates, send connection requests, and message the people you connect with.
 
+[![Live demo](https://img.shields.io/badge/Live%20demo-cougarconnect.onrender.com-3FCF8E?style=flat&logo=render&logoColor=white)](https://cougarconnect.onrender.com/Account/Login)
 [![CI](https://github.com/LuisZarate17/AlumniNetwork/actions/workflows/ci.yml/badge.svg)](https://github.com/LuisZarate17/AlumniNetwork/actions/workflows/ci.yml)
 ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=flat&logo=dotnet&logoColor=white)
 ![Blazor](https://img.shields.io/badge/Blazor%20Server-512BD4?style=flat&logo=blazor&logoColor=white)
 ![ASP.NET Core Identity](https://img.shields.io/badge/ASP.NET%20Core%20Identity-512BD4?style=flat&logo=dotnet&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=flat&logo=microsoftsqlserver&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
 ![xUnit](https://img.shields.io/badge/Tested%20with-xUnit-5A2D91?style=flat)
+
+**🔗 [Live demo](https://cougarconnect.onrender.com/Account/Login)** — sign in with **`demo@cougarconnect.demo`** / **`Demo123!`** (credentials also shown on the login page). Hosted on Render's free tier, so the first load after a period of inactivity takes ~50 seconds to wake up.
 
 CougarConnect is a web platform that helps WSU alumni find each other and stay in touch with their alma mater. A single search box matches graduates across name, graduation year, city, major, and company; users send connection requests, exchange messages once connected, and get recommendations for people they may know.
 
@@ -38,15 +41,16 @@ CougarConnect is a web platform that helps WSU alumni find each other and stay i
 
 ## Architecture
 
-CougarConnect is a Blazor Server app: the browser holds a persistent SignalR connection to the server, which renders interactive components. Two data stores sit behind it — **ASP.NET Core Identity on SQL Server / LocalDB** handles accounts, sign-in, and 2FA, while **Supabase (PostgREST)** stores the alumni domain data (profiles, messages, connection requests, notifications), reached over `HttpClient` in [`SupabaseService`](CougarConnect/CougarConnect/Services/SupabaseService.cs). Transactional email (account confirmation, connection-request links) is sent over SMTP.
+CougarConnect is a Blazor Server app: the browser holds a persistent SignalR connection to the server, which renders interactive components. A single **Supabase Postgres** database sits behind it, reached two ways — **ASP.NET Core Identity via EF Core (Npgsql)** handles accounts, sign-in, and 2FA in its own tables, while the alumni domain data (profiles, messages, connection requests, notifications) is reached over Supabase's **PostgREST** API via `HttpClient` in [`SupabaseService`](CougarConnect/CougarConnect/Services/SupabaseService.cs). Transactional email (account confirmation, connection-request links) is sent over SMTP.
 
 ```mermaid
 graph TD
     B[Browser] <-->|SignalR| BS[Blazor Server App]
-    BS --> ID[ASP.NET Core Identity + EF Core]
-    ID --> SQL[(SQL Server / LocalDB<br/>accounts, 2FA)]
+    BS --> ID[ASP.NET Core Identity + EF Core/Npgsql]
     BS --> SS[SupabaseService<br/>HttpClient]
-    SS --> SB[(Supabase PostgREST<br/>Alumni, Messages,<br/>ConnectionRequests, Notifications)]
+    ID -->|direct SQL| SB[(Supabase Postgres)]
+    SS -->|PostgREST| SB
+    SB --- T[AspNetUsers/accounts, 2FA<br/>Alumni, Messages,<br/>ConnectionRequests, Notifications]
     BS --> EM[EmailSender] --> SMTP[SMTP / Gmail]
 ```
 
@@ -54,15 +58,15 @@ graph TD
 
 ### Prerequisites
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server LocalDB (included with Visual Studio) or a reachable SQL Server instance, for ASP.NET Core Identity's account database
-- Optional: a [Supabase](https://supabase.com) project if you want the alumni search/connections features to work end-to-end — login and registration work without one, but need an `Alumni` table matching `CougarConnect/CougarConnect/Models/Alumni.cs`
+- A PostgreSQL database for ASP.NET Core Identity's account tables — a local Postgres instance, or a [Supabase](https://supabase.com) project (the same one below can serve both Identity and the alumni data)
+- A [Supabase](https://supabase.com) project for the alumni search/connections features. Run [`supabase/schema.sql`](supabase/schema.sql) (and optionally [`supabase/seed.sql`](supabase/seed.sql)) in its SQL Editor; see [`supabase/README.md`](supabase/README.md) for details. The Identity tables are created automatically on startup.
 
 ### Setup
 1. Clone the repo.
 2. Provide configuration — either copy `CougarConnect/CougarConnect/appsettings.Example.json` to `CougarConnect/CougarConnect/appsettings.json` and fill in real values, or use `dotnet user-secrets` (recommended, keeps real values out of any tracked file):
    ```
    cd CougarConnect/CougarConnect
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=(localdb)\mssqllocaldb;Database=CougarConnect;Trusted_Connection=True;MultipleActiveResultSets=true"
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=cougarconnect;Username=postgres;Password=postgres"
    dotnet user-secrets set "Supabase:Url" "https://your-project.supabase.co"
    dotnet user-secrets set "Supabase:ApiKey" "your-supabase-api-key"
    dotnet user-secrets set "Email:SmtpHost" "smtp.gmail.com"
@@ -75,12 +79,11 @@ graph TD
    ```
    dotnet dev-certs https --trust
    ```
-4. Apply the Identity database migrations (creates the login/account tables):
+4. The Identity account tables are created automatically on startup (the app applies any pending EF Core migrations against the configured database). To create them ahead of time instead, run:
    ```
    dotnet tool install --global dotnet-ef
    dotnet ef database update --project CougarConnect/CougarConnect
    ```
-   Alternatively, in `Development` the app exposes a migrations-apply page in the browser the first time you hit an unmigrated database — but running `dotnet ef database update` up front is more reliable for a fresh clone.
 5. Run the app:
    ```
    dotnet run --project CougarConnect/CougarConnect
@@ -92,7 +95,7 @@ The app reads its configuration from `CougarConnect/CougarConnect/appsettings.js
 
 | Key | Purpose |
 |---|---|
-| `ConnectionStrings:DefaultConnection` | SQL Server / LocalDB connection string used by ASP.NET Core Identity for account storage (login, registration, 2FA). |
+| `ConnectionStrings:DefaultConnection` | PostgreSQL (Npgsql) connection string used by ASP.NET Core Identity for account storage (login, registration, 2FA). For Supabase, use the **Session pooler** string from Project Settings > Database. |
 | `Email:SmtpHost` / `Email:SmtpPort` | SMTP server used to send account-confirmation and connection-request emails (defaults: `smtp.gmail.com` / `587`). |
 | `Email:FromAddress` | The email address emails are sent from. |
 | `Email:AppPassword` | Must be a Gmail **App Password**, not your real account password — generate one at https://myaccount.google.com/apppasswords (requires 2-Step Verification enabled). |
@@ -105,4 +108,10 @@ The app reads its configuration from `CougarConnect/CougarConnect/appsettings.js
 dotnet test CougarConnect/CougarConnect.sln
 ```
 
-Covers unit tests for `SupabaseService` (Supabase query/URL construction, connection de-duplication logic, a regression test for a past request-header leak) and `Alumni`'s JSON wire-format mapping, plus an integration test that exercises the real login flow end-to-end (via `WebApplicationFactory` with EF Core's in-memory provider, so no SQL Server/LocalDB is required to run the suite itself).
+Covers unit tests for `SupabaseService` (Supabase query/URL construction, connection de-duplication logic, a regression test for a past request-header leak) and `Alumni`'s JSON wire-format mapping, plus an integration test that exercises the real login flow end-to-end (via `WebApplicationFactory` with EF Core's in-memory provider, so no PostgreSQL database is required to run the suite itself).
+
+Every push and pull request runs this suite on GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) — see the CI badge at the top.
+
+## Deployment
+
+The [live demo](https://cougarconnect.onrender.com/Account/Login) runs as a Docker container on [Render](https://render.com)'s free tier, backed by the Supabase Postgres database described above. The [`Dockerfile`](Dockerfile) publishes the Blazor Server app; on startup it applies the Identity EF Core migrations and (when `DemoData:Seed` is set) seeds the ready-to-use demo account. Configuration — the Supabase connection string, anon key, and demo flag — is supplied through the host's environment variables, never committed. A [`render.yaml`](render.yaml) blueprint documents the service definition.
