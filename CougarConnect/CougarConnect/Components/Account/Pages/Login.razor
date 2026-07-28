@@ -4,17 +4,26 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using CougarConnect.Data
+@using CougarConnect.Services
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject IConfiguration Configuration
 
 <PageTitle>Log in</PageTitle>
 
 <AuthCard Title="Log in">
     <ChildContent>
         <StatusMessage Message="@errorMessage" />
+        @if (showDemoHint)
+        {
+            <div class="alert alert-info" role="alert">
+                <strong>Try the demo:</strong> sign in with
+                <code>@demoEmail</code> / <code>@demoPassword</code>
+            </div>
+        }
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
@@ -54,8 +63,16 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    private bool showDemoHint;
+    private string demoEmail = DemoDataSeeder.DefaultEmail;
+    private string demoPassword = DemoDataSeeder.DefaultPassword;
+
     protected override async Task OnInitializedAsync()
     {
+        showDemoHint = Configuration.GetValue<bool>("DemoData:Seed");
+        demoEmail = Configuration["DemoData:Email"] ?? DemoDataSeeder.DefaultEmail;
+        demoPassword = Configuration["DemoData:Password"] ?? DemoDataSeeder.DefaultPassword;
+
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
             // Clear the existing external cookie to ensure a clean login process

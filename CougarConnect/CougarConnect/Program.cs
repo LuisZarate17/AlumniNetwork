@@ -56,6 +56,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Seed the demo account so the live demo is usable without registering (no-op unless
+// DemoData:Seed is set — so it never runs during tests or ordinary local dev).
+await DemoDataSeeder.SeedAsync(app.Services, app.Configuration, app.Logger);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
