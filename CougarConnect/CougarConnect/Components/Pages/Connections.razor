@@ -169,8 +169,7 @@ else if (errorMessage is null)
             {
                 foreach (var connection in currentUser.ConnectionList)
                 {
-                    var connectionResult = await DBService.GetData<Alumni>(connection.ToString(), "id");
-                    var match = connectionResult.FirstOrDefault();
+                    var match = await DBService.GetAlumniById(connection);
                     if (match != null)
                     {
                         allConnections.Add(match);

@@ -37,6 +37,22 @@ public class SupabaseService
     }
 
     /// <summary>
+    /// Looks up a single alumnus by their numeric primary key. Uses an exact <c>eq</c>
+    /// filter rather than <see cref="GetData{T}"/>, whose <c>ilike</c> (text pattern) filter
+    /// is invalid against the <c>bigint</c> id column and makes PostgREST return an error.
+    /// </summary>
+    public async Task<Alumni?> GetAlumniById(long id)
+    {
+        var url = $"{_baseUrl}/rest/v1/Alumni?id=eq.{id}";
+
+        var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        var results = await response.Content.ReadFromJsonAsync<Alumni[]>() ?? Array.Empty<Alumni>();
+        return results.FirstOrDefault();
+    }
+
+    /// <summary>
     /// Searches every alumni text column for the term at once (PostgREST "or" filter),
     /// so a single search box matches a name, email, city, major, etc. without the
     /// caller having to pick a column.

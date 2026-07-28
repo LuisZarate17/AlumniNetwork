@@ -94,8 +94,7 @@
             }
             else
             {
-                var requesterResult = await DBService.GetData<Alumni>(request.RequesterId.ToString(), "id");
-                requester = requesterResult.FirstOrDefault();
+                requester = await DBService.GetAlumniById(request.RequesterId);
             }
         }
         catch (Exception ex)
@@ -168,8 +167,7 @@
     {
         try
         {
-            var recipientResult = await DBService.GetData<Alumni>(respondedRequest.RecipientId.ToString(), "id");
-            var recipient = recipientResult.FirstOrDefault(a => a.Id == respondedRequest.RecipientId);
+            var recipient = await DBService.GetAlumniById(respondedRequest.RecipientId);
             var recipientName = recipient is null ? "Someone" : $"{recipient.First} {recipient.Last}";
             await DBService.AddNotification(respondedRequest.RequesterId, $"{recipientName} {verb} your connection request.");
         }

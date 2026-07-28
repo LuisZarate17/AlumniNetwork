@@ -137,8 +137,7 @@ else if (errorMessage is null)
         var incoming = await DBService.GetIncomingPendingRequests(currentUser.Id);
         foreach (var request in incoming)
         {
-            var requesterResult = await DBService.GetData<Alumni>(request.RequesterId.ToString(), "id");
-            var requester = requesterResult.FirstOrDefault(a => a.Id == request.RequesterId);
+            var requester = await DBService.GetAlumniById(request.RequesterId);
             pendingRequests.Add(new PendingRequest(request, requester));
         }
     }
