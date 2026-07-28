@@ -19,9 +19,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         // variables, unlike that override, are part of the config CreateBuilder(args) loads
         // up front, so they're visible in time. Without this, tests only pass on machines that
         // happen to have a real DefaultConnection sitting in dotnet user-secrets already.
+        // The value only needs to be Npgsql-parseable (Program.cs calls UseNpgsql on it) — the
+        // DbContext is swapped for the in-memory provider below before anything actually connects.
         Environment.SetEnvironmentVariable(
             "ConnectionStrings__DefaultConnection",
-            "Server=(local);Database=DoesNotMatter;Trusted_Connection=True;");
+            "Host=localhost;Port=5432;Database=DoesNotMatter;Username=test;Password=test");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
