@@ -34,7 +34,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+// Email confirmation is not required to sign in. The app's only configured SMTP sender is a
+// shared credential that can't be rotated, so confirmation mail can't be reliably delivered;
+// requiring it would lock every self-registered user out. Registrants are signed in directly
+// (see Register.razor), and existing unconfirmed accounts can now log in too.
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();

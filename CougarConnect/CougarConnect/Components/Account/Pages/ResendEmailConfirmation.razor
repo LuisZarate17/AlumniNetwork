@@ -11,6 +11,7 @@
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ILogger<ResendEmailConfirmation> Logger
 
 <PageTitle>Resend email confirmation</PageTitle>
 
@@ -60,7 +61,17 @@
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
         // The email is plain text, so pass the raw URL - HTML-encoding it turns "&" into
         // "&amp;" and breaks the "code" query parameter.
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
+        try
+        {
+            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, callbackUrl);
+        }
+        catch (Exception ex)
+        {
+            // A failed send (e.g. SMTP not configured or credentials rejected) must not crash
+            // the request. Log it and still show the neutral message so we don't leak whether
+            // the account exists - mirrors the handling in Register.razor.
+            Logger.LogError(ex, "Failed to resend confirmation email to {Email}", Input.Email);
+        }
 
         message = "Verification email sent. Please check your email.";
     }
